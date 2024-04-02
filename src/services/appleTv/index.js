@@ -45,11 +45,15 @@ export default async function appleTv({ name, year, outPath }) {
 			);
 		});
 
+		console.log('googleResults', googleResults)
+
 		let program = googleResults.find((result) => {
 			const normalizedText = normalizeText(result.text);
 			const normalizedName = normalizeText(name);
 			return normalizedText === normalizedName;
 		});
+
+		console.log('program', program)
 
 		if (!program) {
 			browser.close();
