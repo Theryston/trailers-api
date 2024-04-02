@@ -8,6 +8,7 @@ import { log, logPercent } from '../../utils/log.js';
 import ffmpeg from '../../utils/ffmpeg.js';
 import { GLOBAL_TEMP_FOLDER } from '../../constants.js';
 import normalizeText from '../../utils/normalizeText.js';
+import google from '../../google.js';
 
 export default async function netflix({ name, year, outPath }) {
   log({
@@ -33,34 +34,23 @@ export default async function netflix({ name, year, outPath }) {
       message: `Netflix | ${name} | Searching for netflix page on Google`,
     });
     const term = `${name} ${year} site:https://www.netflix.com`
-    await page.goto(`https://google.com/search?q=${encodeURI(term)}`);
+    const googleResults = await google(term);
 
-    const googleResults = await page.evaluate(() => {
-      const anchors = Array.from(document.querySelectorAll("a"));
+    const program = googleResults.find((result) => {
+      const titleWords = result.title.split("|")[0].split(' ');
+      const title = titleWords.slice(1, titleWords.length).join(' ').trim();
 
-      const results = anchors.map((anchor) => {
-        return {
-          href: anchor.href,
-          text: anchor.text.split("|")[0].trim().replace("Assistir ", ""),
-        };
-      });
-
-      return results.filter((result) =>
-        result.href.startsWith("https://www.netflix.com")
-      );
-    });
-
-    let program = googleResults.find((result) => {
-      const normalizedText = normalizeText(result.text);
+      const normalizedText = normalizeText(title);
       const normalizedName = normalizeText(name);
-      return normalizedText === normalizedName;
+
+      return normalizedText === normalizedName && result.link.startsWith("https://www.netflix.com");
     });
 
     if (!program) {
       return false;
     }
 
-    const trailerPage = program.href;
+    const trailerPage = program.link;
 
     log({
       type: 'INFO',

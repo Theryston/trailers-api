@@ -247,7 +247,7 @@ app.get('/', async (req, res) => {
     res.send('Welcome to Trailers API');
 })
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT || '3000');
 app.listen(PORT, () => {
     log({
         type: 'INFO',

@@ -1,7 +1,6 @@
 FROM node:lts-slim
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
-ENV PORT 3000
 
 RUN apt-get update && apt-get install curl gnupg -y \
     && curl --location --silent https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \

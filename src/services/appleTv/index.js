@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import locateChrome from 'locate-chrome';
 import { log } from '../../utils/log.js';
 import normalizeText from '../../utils/normalizeText.js';
+import google from '../../google.js';
 
 export default async function appleTv({ name, year, outPath }) {
 	log({
@@ -27,29 +28,16 @@ export default async function appleTv({ name, year, outPath }) {
 			message: `Apple TV | ${name} | Searching for Apple TV page on Google`,
 		});
 		const term = `${name} ${year} site:https://tv.apple.com`;
-		await page.goto(`https://google.com/search?q=${encodeURI(term)}`);
+		const googleResults = await google(term);
 
-		const googleResults = await page.evaluate(() => {
-			const anchors = Array.from(document.querySelectorAll('a'));
+		const program = googleResults.find((result) => {
+			const hrefParts = result.link.split('/');
+			const title = hrefParts[hrefParts.length - 2];
 
-			const results = anchors.map((anchor) => {
-				const hrefParts = anchor.href.split('/');
-				return {
-					href: anchor.href,
-					text: hrefParts[hrefParts.length - 2],
-				};
-			});
-
-			// return results.filter((result) => result.href.startsWith('https://tv.apple.com'));
-			return results;
-		});
-
-		console.log('googleResults', googleResults);
-
-		let program = googleResults.find((result) => {
-			const normalizedText = normalizeText(result.text);
+			const normalizedText = normalizeText(title);
 			const normalizedName = normalizeText(name);
-			return normalizedText === normalizedName;
+
+			return normalizedText === normalizedName && result.link.startsWith('https://tv.apple.com');
 		});
 
 		if (!program) {
@@ -61,7 +49,7 @@ export default async function appleTv({ name, year, outPath }) {
 			return false;
 		}
 
-		const trailerPage = program.href;
+		const trailerPage = program.link;
 
 		log({
 			type: 'INFO',
