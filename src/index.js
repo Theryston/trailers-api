@@ -37,15 +37,19 @@ const queue = fastq(worker, CONCURRENCY);
  *               serviceName:
  *                 type: string
  *                 description: The name of the service (You can get it from the list of services)
+ *                 example: APPLE_TV
  *               name:
  *                 type: string
  *                 description: The name of the movie or tv show
+ *                 example: The Batman
  *               year:
  *                 type: number
  *                 description: The release year of the movie or tv show
+ *                 example: 2022
  *               callbackUrl:
  *                 type: string
  *                 description: If you provide this url, every time the process status changes, the callback url will receive a POST request with all the process information
+ *                 example: http://example.com
  *                 required: false
  *     responses:
  *       201:
