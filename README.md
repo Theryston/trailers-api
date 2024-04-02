@@ -9,3 +9,7 @@ key or login credentials!
 - [x] Download trailers in high resolution
 - [x] Support for multiple platforms
 - [x] Webhook support
+
+## Docs
+
+- [x] [Swagger UI](https://trailers-api.fly.dev/docs)
