@@ -29,6 +29,8 @@
     "nodemon": "^3.1.0",
     "puppeteer": "^20.7.1",
     "slug": "^8.2.2",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
     "uuid": "^9.0.1"
   }
 }

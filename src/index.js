@@ -10,15 +10,76 @@ import { CONCURRENCY, PROCESS_STATUS } from './constants.js';
 import { log } from './utils/log.js';
 import findProcess from './db/find-process.js';
 import cancelProcess from './db/cancel-process.js';
+import swaggerUi from 'swagger-ui-express';
+import specs from './swagger.js';
 
 cancelProcess();
 
 const app = express();
 app.use(express.json());
 app.use(cors('*'));
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 const queue = fastq(worker, CONCURRENCY);
 
+/**
+ * @swagger
+ * /process:
+ *   post:
+ *     summary: Request the download of a trailer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               serviceName:
+ *                 type: string
+ *                 description: The name of the service (You can get it from the list of services)
+ *               name:
+ *                 type: string
+ *                 description: The name of the movie or tv show
+ *               year:
+ *                 type: number
+ *                 description: The release year of the movie or tv show
+ *               callbackUrl:
+ *                 type: string
+ *                 description: If you provide this url, every time the process status changes, the callback url will receive a POST request with all the process information
+ *                 required: false
+ *     responses:
+ *       201:
+ *         description: The process was added to the queue
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 processId:
+ *                   type: string
+ *       400:
+ *         description: Invalid parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: serviceName not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 availableServices:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ */
 app.post('/process', async (req, res) => {
     const { serviceName, name, year, callbackUrl } = req.body;
 
@@ -75,6 +136,59 @@ app.post('/process', async (req, res) => {
     }
 })
 
+/**
+ * @swagger
+ * /process/{processId}:
+ *   get:
+ *     summary: Get the status of a process
+ *     parameters:
+ *       - name: processId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: The process was found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 processId:
+ *                   type: string
+ *                 status:
+ *                   type: string
+ *                 callback_url:
+ *                   type: string
+ *                   required: false
+ *                 description:
+ *                   type: string
+ *                 is_completed:
+ *                   type: boolean
+ *                 trailers:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       process_id:
+ *                         type: string
+ *                       url:
+ *                         type: string
+ *                       title:
+ *                         type: string
+ *       404:
+ *         description: The process was not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ */
 app.get('/process/:processId', async (req, res) => {
     const { processId } = req.params;
     const process = findProcess(processId);
@@ -88,12 +202,49 @@ app.get('/process/:processId', async (req, res) => {
     res.json(process);
 })
 
+/**
+ * @swagger
+ * /services:
+ *   get:
+ *     summary: Get the list of services
+ *     responses:
+ *       200:
+ *         description: The list of services
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   name:
+ *                     type: string
+ */
 app.get('/services', async (req, res) => {
-    res.json(getServices());
+    res.json([{ name: "ALL" }, ...getServices().map((service) => ({ name: service.name }))]);
 })
 
+/**
+ * @swagger
+ * /all-status:
+ *   get:
+ *     summary: Get all the status that a process can have
+ *     responses:
+ *       200:
+ *         description: The list of status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: string
+ */
 app.get('/all-status', async (req, res) => {
-    return res.json(PROCESS_STATUS);
+    return res.json(Object.values(PROCESS_STATUS));
+})
+
+app.get('/', async (req, res) => {
+    res.send('Welcome to Trailers API');
 })
 
 const PORT = process.env.PORT || 3000;
