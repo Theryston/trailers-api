@@ -40,10 +40,11 @@ export default async function appleTv({ name, year, outPath }) {
 				};
 			});
 
-			console.log('results', results)
-
-			return results.filter((result) => result.href.startsWith('https://tv.apple.com'));
+			// return results.filter((result) => result.href.startsWith('https://tv.apple.com'));
+			return results;
 		});
+
+		console.log('googleResults', googleResults);
 
 		let program = googleResults.find((result) => {
 			const normalizedText = normalizeText(result.text);
