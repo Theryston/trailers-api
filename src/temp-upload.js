@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { v4 as uuid } from "uuid";
-import { S3Client, PutObjectAclCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, PutObjectAclCommand } from "@aws-sdk/client-s3";
 import mime from "mime-types";
 
 const s3Client = new S3Client({
@@ -20,16 +20,28 @@ export async function tempUpload(filePath) {
     const id = uuid();
     const key = path.join(id, fileName);
 
-    const putCommand = new PutObjectAclCommand({
+    const putCommand = new PutObjectCommand({
         Bucket: process.env.AWS_S3_BUCKET_NAME,
         Key: key,
-        ACL: 'public-read',
         Body: file,
-        ContentType: mimeType || 'application/octet-stream',
+        ACL: 'public-read',
+        ContentType: mimeType,
         ContentLength: stats.size,
-    });
+        Metadata: {
+            id,
+            fileName
+        }
+    })
 
     await s3Client.send(putCommand);
+
+    const putACLCommand = new PutObjectAclCommand({
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
+        Key: key,
+        ACL: 'public-read'
+    })
+
+    await s3Client.send(putACLCommand);
 
     const url = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
 
