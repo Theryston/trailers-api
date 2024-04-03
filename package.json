@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "generate": "drizzle-kit generate:sqlite"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +17,7 @@
     "better-sqlite3": "^9.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.30.6",
     "express": "^4.19.2",
     "fastq": "^1.17.1",
     "ffmpeg-static": "^5.1.0",
@@ -33,5 +35,8 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
     "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.20.14"
   }
 }

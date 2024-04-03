@@ -2,18 +2,17 @@ import 'dotenv/config.js';
 import './check-process.js';
 import express from "express";
 import { promise as fastq } from 'fastq';
-import createProcess from './db/create-process.js';
 import cors from 'cors';
 import getServices from './services/index.js';
 import worker from './worker.js';
 import { CONCURRENCY, PROCESS_STATUS } from './constants.js';
 import { log } from './utils/log.js';
 import findProcess from './db/find-process.js';
-import cancelProcess from './db/cancel-process.js';
 import swaggerUi from 'swagger-ui-express';
 import specs from './swagger.js';
-
-cancelProcess();
+import db from './db/index.js';
+import { processSchema } from './db/schema.js';
+import continueProcess from './continue-process.js';
 
 const app = express();
 app.use(express.json());
@@ -21,6 +20,8 @@ app.use(cors('*'));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 const queue = fastq(worker, CONCURRENCY);
+
+continueProcess(queue);
 
 /**
  * @swagger
@@ -90,7 +91,7 @@ app.post('/process', async (req, res) => {
     try {
         if (!name || !year) {
             return res.status(400).json({
-                message: `Missing parameters: serviceName=${serviceName}, name=${name}, year=${year}`
+                message: `Missing parameters: name=${name}, year=${year}`
             });
         }
 
@@ -111,22 +112,33 @@ app.post('/process', async (req, res) => {
             })
         }
 
-        const processId = createProcess({
-            status: PROCESS_STATUS.PENDING,
-            description: 'Process was created and is in queue',
-            callbackUrl,
-        });
+        const processes = await db
+            .insert(processSchema)
+            .values({
+                status: PROCESS_STATUS.PENDING,
+                serviceName,
+                statusDetails: 'Process was created and is in queue',
+                services: services.map((service) => service.name).join('|'),
+                callbackUrl,
+                name,
+                year,
+                isCompleted: 0,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            })
+            .returning()
+        const process = processes[0];
 
         queue.push({
-            name: String(name),
+            name,
             year: String(year),
-            processId: String(processId),
+            processId: process.id,
             services,
             callbackUrl
         });
 
         res.status(201).json({
-            processId
+            processId: process.id
         })
     } catch (error) {
         log({
@@ -159,17 +171,32 @@ app.post('/process', async (req, res) => {
  *             schema:
  *               type: object
  *               properties:
- *                 processId:
+ *                 id:
  *                   type: string
  *                 status:
  *                   type: string
- *                 callback_url:
+ *                 statusDetails:
  *                   type: string
- *                   required: false
- *                 description:
+ *                 isCompleted:
+ *                   type: number
+ *                 serviceName:
  *                   type: string
- *                 is_completed:
- *                   type: boolean
+ *                 services:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 year:
+ *                   type: number
+ *                 trailerPage:
+ *                   type: string
+ *                 callbackUrl:
+ *                   type: string
+ *                 callbackError:
+ *                   type: string
+ *                 createdAt:
+ *                   type: string
+ *                 updatedAt:
+ *                   type: string
  *                 trailers:
  *                   type: array
  *                   items:
@@ -177,11 +204,15 @@ app.post('/process', async (req, res) => {
  *                     properties:
  *                       id:
  *                         type: string
- *                       process_id:
- *                         type: string
  *                       url:
  *                         type: string
  *                       title:
+ *                         type: string
+ *                       processId:
+ *                         type: string
+ *                       createdAt:
+ *                         type: string
+ *                       updatedAt:
  *                         type: string
  *       404:
  *         description: The process was not found
@@ -195,9 +226,9 @@ app.post('/process', async (req, res) => {
  */
 app.get('/process/:processId', async (req, res) => {
     const { processId } = req.params;
-    const process = findProcess(processId);
+    const process = await findProcess(processId);
 
-    if (!process.id) {
+    if (!process?.id) {
         return res.status(404).json({
             message: 'Process not found'
         });

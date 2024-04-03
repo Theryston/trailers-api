@@ -8,7 +8,7 @@ import { log } from '../../utils/log.js';
 import normalizeText from '../../utils/normalizeText.js';
 import google from '../../google.js';
 
-export default async function appleTv({ name, year, outPath }) {
+export default async function appleTv({ name, year, outPath, trailerPage, onTrailerFound }) {
 	log({
 		type: 'INFO',
 		message: `Apple TV | ${name} | Opening browser`,
@@ -23,33 +23,39 @@ export default async function appleTv({ name, year, outPath }) {
 	const page = await browser.newPage();
 
 	try {
-		log({
-			type: 'INFO',
-			message: `Apple TV | ${name} | Searching for Apple TV page on Google`,
-		});
-		const term = `${name} ${year} site:https://tv.apple.com`;
-		const googleResults = await google(term);
-
-		const program = googleResults.find((result) => {
-			const hrefParts = result.link.split('/');
-			const title = hrefParts[hrefParts.length - 2];
-
-			const normalizedText = normalizeText(title);
-			const normalizedName = normalizeText(name);
-
-			return normalizedText === normalizedName && result.link.startsWith('https://tv.apple.com');
-		});
-
-		if (!program) {
-			browser.close();
+		if (!trailerPage) {
 			log({
-				type: 'ERROR',
-				message: `Apple TV | ${name} | Program not found.`,
+				type: 'INFO',
+				message: `Apple TV | ${name} | Searching for Apple TV page on Google`,
 			});
-			return false;
+			const term = `${name} ${year} site:https://tv.apple.com`;
+			const googleResults = await google(term);
+
+			const program = googleResults.find((result) => {
+				const hrefParts = result.link.split('/');
+				const title = hrefParts[hrefParts.length - 2];
+
+				const normalizedText = normalizeText(title);
+				const normalizedName = normalizeText(name);
+
+				return normalizedText === normalizedName && result.link.startsWith('https://tv.apple.com');
+			});
+
+			trailerPage = program?.link;
+
+			if (!trailerPage) {
+				browser.close();
+				log({
+					type: 'ERROR',
+					message: `Apple TV | ${name} | Trailer not found.`,
+				});
+				return false;
+			}
 		}
 
-		const trailerPage = program.link;
+		if (onTrailerFound) {
+			onTrailerFound(trailerPage);
+		}
 
 		log({
 			type: 'INFO',

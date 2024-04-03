@@ -10,7 +10,7 @@ import { GLOBAL_TEMP_FOLDER } from '../../constants.js';
 import normalizeText from '../../utils/normalizeText.js';
 import google from '../../google.js';
 
-export default async function netflix({ name, year, outPath }) {
+export default async function netflix({ name, year, outPath, trailerPage, onTrailerFound }) {
   log({
     type: 'INFO',
     message: `Netflix | ${name} | Opening browser`,
@@ -33,24 +33,36 @@ export default async function netflix({ name, year, outPath }) {
       type: 'INFO',
       message: `Netflix | ${name} | Searching for netflix page on Google`,
     });
-    const term = `${name} ${year} site:https://www.netflix.com`
-    const googleResults = await google(term);
 
-    const program = googleResults.find((result) => {
-      const titleWords = result.title.split("|")[0].split(' ');
-      const title = titleWords.slice(1, titleWords.length).join(' ').trim();
+    if (!trailerPage) {
+      const term = `${name} ${year} site:https://www.netflix.com`
+      const googleResults = await google(term);
 
-      const normalizedText = normalizeText(title);
-      const normalizedName = normalizeText(name);
+      const program = googleResults.find((result) => {
+        const titleWords = result.title.split("|")[0].split(' ');
+        const title = titleWords.slice(1, titleWords.length).join(' ').trim();
 
-      return normalizedText === normalizedName && result.link.startsWith("https://www.netflix.com");
-    });
+        const normalizedText = normalizeText(title);
+        const normalizedName = normalizeText(name);
 
-    if (!program) {
-      return false;
+        return normalizedText === normalizedName && result.link.startsWith("https://www.netflix.com");
+      });
+
+      trailerPage = program?.link;
+
+      if (!trailerPage) {
+        browser.close();
+        log({
+          type: 'ERROR',
+          message: `Netflix | ${name} | Trailer not found.`,
+        });
+        return false;
+      }
     }
 
-    const trailerPage = program.link;
+    if (onTrailerFound) {
+      onTrailerFound(trailerPage);
+    }
 
     log({
       type: 'INFO',

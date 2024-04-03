@@ -1,12 +1,14 @@
-import betterSqlite3 from "better-sqlite3";
 import path from "node:path";
 import { DATA_FOLDER } from "../constants.js";
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
+import Database from 'better-sqlite3';
 
 const dbFile = path.join(DATA_FOLDER, "database.sqlite");
+const sqlite = new Database(dbFile);
 
-const db = betterSqlite3(dbFile);
+const db = drizzle(sqlite);
 
-db.exec(`CREATE TABLE IF NOT EXISTS process (id INTEGER PRIMARY KEY AUTOINCREMENT, status TEXT, callback_url TEXT, description TEXT, is_completed INTEGER)`);
-db.exec(`CREATE TABLE IF NOT EXISTS trailers (id INTEGER PRIMARY KEY AUTOINCREMENT, process_id INTEGER, url TEXT, title TEXT, FOREIGN KEY(process_id) REFERENCES process(id))`);
+migrate(db, { migrationsFolder: path.join(process.cwd(), "drizzle") })
 
 export default db

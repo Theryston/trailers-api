@@ -15,7 +15,9 @@ export async function tempUpload(filePath) {
     await axios.post(fileUrl, file, {
         headers: {
             'Content-Length': stats.size
-        }
+        },
+        maxBodyLength: Infinity,
+        timeout: 100000
     })
 
     return fileUrl

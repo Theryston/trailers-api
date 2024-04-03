@@ -5,11 +5,12 @@ import { GLOBAL_TEMP_FOLDER, PROCESS_STATUS } from "./constants.js";
 import processLog from "./utils/process-log.js";
 import { log } from "./utils/log.js";
 import { tempUpload } from "./temp-upload.js";
-import createTrailer from "./db/create-trailer.js";
+import db from "./db/index.js";
+import { trailersSchema } from "./db/schema.js";
 
-export default async function worker({ name, year, processId, services, callbackUrl }) {
+export default async function worker({ name, year, processId, services, callbackUrl, trailerPage }) {
   try {
-    processLog({ id: processId, status: PROCESS_STATUS.PROCESSING, description: 'Process was started', callbackUrl });
+    await processLog({ id: processId, status: PROCESS_STATUS.PROCESSING, description: 'Process was started', callbackUrl });
 
     const trailersPath = path.join(GLOBAL_TEMP_FOLDER, processId);
 
@@ -27,11 +28,19 @@ export default async function worker({ name, year, processId, services, callback
 
     let foundTrailers = null;
 
-    processLog({ id: processId, status: PROCESS_STATUS.TRYING_TO_DOWNLOAD, description: `Trying to download the videos from the services: ${services.map((service) => service.name).join(', ')}`, callbackUrl });
+    await processLog({ id: processId, status: PROCESS_STATUS.FINDING_TRAILER_PAGE, description: `Looking for trailer on: ${services.map((service) => service.name).join(', ')}`, callbackUrl });
 
     for (const service of services) {
       try {
-        foundTrailers = await service.func({ name, year, outPath });
+        foundTrailers = await service.func({
+          name,
+          year,
+          outPath,
+          trailerPage,
+          onTrailerFound: async (foundTrailerPage) => {
+            processLog({ id: processId, status: PROCESS_STATUS.TRYING_TO_DOWNLOAD, description: `Trying to download the trailers from: ${service.name}`, trailerPage: foundTrailerPage, callbackUrl });
+          }
+        });
 
         if (foundTrailers) {
           break;
@@ -51,24 +60,33 @@ export default async function worker({ name, year, processId, services, callback
         fs.rmSync(outPath, { recursive: true });
       }
 
-      processLog({ id: processId, status: PROCESS_STATUS.NO_TRAILERS, description: 'Trailers not found. Try again with another title variation', callbackUrl });
+      await processLog({ id: processId, status: PROCESS_STATUS.NO_TRAILERS, description: 'Trailers not found. Try again with another title variation', callbackUrl });
       return;
     }
 
-    processLog({ id: processId, status: PROCESS_STATUS.SAVING, description: `Saving videos: ${foundTrailers.map((trailer) => trailer.title).join(', ')}`, callbackUrl });
+    await processLog({ id: processId, status: PROCESS_STATUS.SAVING, description: `Saving videos: ${foundTrailers.map((trailer) => trailer.title).join(', ')}`, callbackUrl });
 
     for (const trailer of foundTrailers) {
       const url = await tempUpload(trailer.path);
-      createTrailer(processId, url, trailer.title);
+      await db
+        .insert(trailersSchema)
+        .values({
+          processId,
+          url,
+          title: trailer.title,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
     }
 
-    processLog({ id: processId, status: PROCESS_STATUS.DONE, description: 'Process completed', callbackUrl });
+    await processLog({ id: processId, status: PROCESS_STATUS.DONE, description: 'Process completed', callbackUrl });
   } catch (error) {
+    console.log(error);
     log({
       type: 'ERROR',
       message: `Failed to process: ${error.message}`,
       level: 'normal'
     });
-    processLog({ id: processId, status: PROCESS_STATUS.ERROR, description: `Failed to process: ${error.message}`, callbackUrl });
+    await processLog({ id: processId, status: PROCESS_STATUS.ERROR, description: `Failed to process: ${error.message}`, callbackUrl });
   }
 }

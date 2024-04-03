@@ -8,6 +8,7 @@ export const CONCURRENCY = 5;
 export const PROCESS_STATUS = {
     PENDING: 'pending',
     PROCESSING: 'processing',
+    FINDING_TRAILER_PAGE: 'finding_trailer_page',
     TRYING_TO_DOWNLOAD: 'trying_to_download',
     NO_TRAILERS: 'no_trailers',
     SAVING: 'saving',

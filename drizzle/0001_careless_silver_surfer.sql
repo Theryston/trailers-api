@@ -1,0 +1,1 @@
+ALTER TABLE process ADD `services` text NOT NULL;
