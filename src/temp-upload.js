@@ -18,14 +18,7 @@ export async function tempUpload(filePath) {
             'Content-Length': stats.size
         },
         maxBodyLength: Infinity,
-        timeout: 100000,
-        onUploadProgress: (progress) => {
-            logPercent({
-                id: `temp-upload-${fileName}`,
-                total: stats.size,
-                loaded: progress.loaded,
-            });
-        }
+        timeout: Infinity,
     })
 
     return fileUrl
