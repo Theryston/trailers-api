@@ -11,7 +11,7 @@ import google from '../../google.js';
 export default async function appleTv({ name, year, outPath, trailerPage, onTrailerFound }) {
 	log({
 		type: 'INFO',
-		message: `Apple TV | ${name} | Opening browser`,
+		message: `Apple TV | Opening browser`,
 	});
 
 	const executablePath = await locateChrome();
@@ -26,8 +26,9 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 		if (!trailerPage) {
 			log({
 				type: 'INFO',
-				message: `Apple TV | ${name} | Searching for Apple TV page on Google`,
+				message: `Apple TV | Searching for Apple TV page on Google`,
 			});
+
 			const term = `${name} ${year} site:https://tv.apple.com`;
 			const googleResults = await google(term);
 
@@ -47,7 +48,7 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 				browser.close();
 				log({
 					type: 'ERROR',
-					message: `Apple TV | ${name} | Trailer not found.`,
+					message: `Apple TV | Trailer not found.`,
 				});
 				return false;
 			}
@@ -59,13 +60,13 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 
 		log({
 			type: 'INFO',
-			message: `Apple TV | ${name} | Opening the Apple TV page`,
+			message: `Apple TV | Opening the Apple TV page`,
 		});
 		await page.goto(trailerPage);
 
 		log({
 			type: 'INFO',
-			message: `Apple TV | ${name} | Verifying if has trailers`,
+			message: `Apple TV | Verifying if has trailers`,
 		});
 
 		await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -78,7 +79,7 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 			browser.close();
 			log({
 				type: 'ERROR',
-				message: `Apple TV | ${name} | Trailer not found.`,
+				message: `Apple TV | Trailer not found.`,
 			});
 			return false;
 		}
@@ -89,7 +90,7 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 			browser.close();
 			log({
 				type: 'ERROR',
-				message: `Apple TV | ${name} | Trailer not found.`,
+				message: `Apple TV | Trailer not found.`,
 			});
 			return false;
 		}
@@ -101,21 +102,21 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 			browser.close();
 			log({
 				type: 'ERROR',
-				message: `Apple TV | ${name} | Trailer not found.`,
+				message: `Apple TV | Trailer not found.`,
 			});
 			return false;
 		}
 
 		log({
 			type: 'INFO',
-			message: `Apple TV | ${name} | ${arrayLi.length} trailers found`,
+			message: `Apple TV | ${arrayLi.length} trailers found`,
 		});
 
 		const downloadedVideos = [];
 		for (let i = 0; i < arrayLi.length; i++) {
 			log({
 				type: 'INFO',
-				message: `Apple TV | ${name} | Opening trailer ${i + 1}`,
+				message: `Apple TV | Opening trailer ${i + 1}`,
 			});
 			await new Promise((resolve) => setTimeout(resolve, 5000));
 			await page.waitForSelector('#uts-col-Trailers');
@@ -134,7 +135,7 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 
 			log({
 				type: 'INFO',
-				message: `Apple TV | ${name} | Getting the videos url of trailer ${i + 1
+				message: `Apple TV | Getting the videos url of trailer ${i + 1
 					}`,
 			});
 
@@ -162,7 +163,7 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 				browser.close();
 				log({
 					type: 'ERROR',
-					message: `Apple TV | ${name} | None video found`,
+					message: `Apple TV | None video found`,
 				});
 				return false;
 			}
@@ -186,7 +187,6 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 				playlist,
 				resultVideoPath,
 				videoNumber: i + 1,
-				name,
 			});
 
 			downloadedVideos.push({
@@ -203,7 +203,7 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 		browser.close();
 		log({
 			type: 'ERROR',
-			message: `Apple TV | ${name} | Something went wrong`,
+			message: `Apple TV | Something went wrong`,
 			level: 'important',
 		});
 		console.log(error);

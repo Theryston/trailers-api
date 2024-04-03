@@ -13,7 +13,7 @@ import google from '../../google.js';
 export default async function netflix({ name, year, outPath, trailerPage, onTrailerFound }) {
   log({
     type: 'INFO',
-    message: `Netflix | ${name} | Opening browser`,
+    message: `Netflix | Opening browser`,
   });
 
   const executablePath = await locateChrome();
@@ -29,12 +29,12 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
   );
 
   try {
-    log({
-      type: 'INFO',
-      message: `Netflix | ${name} | Searching for netflix page on Google`,
-    });
-
     if (!trailerPage) {
+      log({
+        type: 'INFO',
+        message: `Netflix | Searching for netflix page on Google`,
+      });
+
       const term = `${name} ${year} site:https://www.netflix.com`
       const googleResults = await google(term);
 
@@ -54,7 +54,7 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
         browser.close();
         log({
           type: 'ERROR',
-          message: `Netflix | ${name} | Trailer not found.`,
+          message: `Netflix | Trailer not found.`,
         });
         return false;
       }
@@ -66,14 +66,14 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
 
     log({
       type: 'INFO',
-      message: `Netflix | ${name} | Opening the Netflix page`,
+      message: `Netflix | Opening the Netflix page`,
     });
 
     await page.goto(trailerPage);
 
     log({
       type: 'INFO',
-      message: `Netflix | ${name} | Verifying if has trailers`,
+      message: `Netflix | Verifying if has trailers`,
     });
 
     try {
@@ -84,7 +84,7 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
       browser.close();
       log({
         type: 'ERROR',
-        message: `Netflix | ${name} | Trailer not found.`,
+        message: `Netflix | Trailer not found.`,
       });
       return false;
     }
@@ -97,7 +97,7 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
       browser.close();
       log({
         type: 'ERROR',
-        message: `Netflix | ${name} | Trailer not found.`,
+        message: `Netflix | Trailer not found.`,
       });
       return false;
     }
@@ -119,14 +119,14 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
       browser.close();
       log({
         type: 'ERROR',
-        message: `Netflix | ${name} | Trailer not found.`,
+        message: `Netflix | Trailer not found.`,
       });
       return false;
     }
 
     log({
       type: 'INFO',
-      message: `Netflix | ${name} | Preparing requests observer`,
+      message: `Netflix | Preparing requests observer`,
     });
     await page.setRequestInterception(true);
 
@@ -162,7 +162,7 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
     for (let i = 0; i < arrayLi.length; i++) {
       log({
         type: 'INFO',
-        message: `Netflix | ${name} | Opening trailer ${i + 1}`,
+        message: `Netflix | Opening trailer ${i + 1}`,
       });
       trailersSection = await page.$(
         '.nmtitle-section.section-additional-videos'
@@ -201,7 +201,7 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
 
       log({
         type: 'INFO',
-        message: `Netflix | ${name} | Waiting for trailer ${i + 1} to load`,
+        message: `Netflix | Waiting for trailer ${i + 1} to load`,
       });
       const response = await page.waitForResponse(
         (response) =>
@@ -240,19 +240,19 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
 
       log({
         type: 'INFO',
-        message: `Netflix | ${name} | Downloading video of trailer ${i + 1}`,
+        message: `Netflix | Downloading video of trailer ${i + 1}`,
       });
       await downloadFile(videoUrl, videoTempPath);
 
       log({
         type: 'INFO',
-        message: `Netflix | ${name} | Downloading audio of trailer ${i + 1}`,
+        message: `Netflix | Downloading audio of trailer ${i + 1}`,
       });
       await downloadFile(audioUrl, audioTempPath);
 
       log({
         type: 'INFO',
-        message: `Netflix | ${name} | Merging audio and video of trailer ${i + 1
+        message: `Netflix | Merging audio and video of trailer ${i + 1
           }`,
       });
 
@@ -270,7 +270,7 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
               logPercent({
                 total: 100,
                 loaded: progress.percent || 0,
-                id: `Netflix | ${name} | Merging audio and video of trailer ${i + 1}`,
+                id: `Netflix | Merging audio and video of trailer ${i + 1}`,
               });
             })
             .on('end', () => {
@@ -289,13 +289,13 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
       } catch (error) {
         log({
           type: 'ERROR',
-          message: `Netflix | ${name} | Something went wrong with trailer ${i + 1}`,
+          message: `Netflix | Something went wrong with trailer ${i + 1}`,
         });
       }
 
       log({
         type: 'INFO',
-        message: `Netflix | ${name} | Deleting temp files of trailer ${i + 1}`,
+        message: `Netflix | Deleting temp files of trailer ${i + 1}`,
       });
       fs.unlinkSync(videoTempPath);
       fs.unlinkSync(audioTempPath);
@@ -306,14 +306,14 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
     browser.close();
     log({
       type: 'INFO',
-      message: `Netflix | ${name} | All trailers downloaded`,
+      message: `Netflix | All trailers downloaded`,
     });
     return downloadedVideos;
   } catch (error) {
     browser.close();
     log({
       type: 'ERROR',
-      message: `Netflix | ${name} | Something went wrong`,
+      message: `Netflix | Something went wrong`,
       level: 'important',
     });
     console.log(error);

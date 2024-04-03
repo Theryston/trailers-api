@@ -12,13 +12,11 @@ export default async function worker({ name, year, processId, services, callback
   try {
     await processLog({ id: processId, status: PROCESS_STATUS.PROCESSING, description: 'Process was started', callbackUrl });
 
-    const trailersPath = path.join(GLOBAL_TEMP_FOLDER, processId);
+    const outPath = path.join(GLOBAL_TEMP_FOLDER, processId);
 
-    if (!fs.existsSync(trailersPath)) {
-      fs.mkdirSync(trailersPath);
+    if (!fs.existsSync(outPath)) {
+      fs.mkdirSync(outPath);
     }
-
-    const outPath = path.join(trailersPath, slug(`${name} ${year}`));
 
     if (fs.existsSync(outPath)) {
       fs.rmSync(outPath, { recursive: true, force: true });
@@ -84,7 +82,7 @@ export default async function worker({ name, year, processId, services, callback
     console.log(error);
     log({
       type: 'ERROR',
-      message: `Failed to process: ${error.message}`,
+      message: `Failed to process: ${error.message || 'unknown error'}`,
       level: 'normal'
     });
     await processLog({ id: processId, status: PROCESS_STATUS.ERROR, description: `Failed to process: ${error.message}`, callbackUrl });

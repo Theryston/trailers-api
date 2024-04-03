@@ -28,6 +28,7 @@ continueProcess(queue);
  * /process:
  *   post:
  *     summary: Request the download of a trailer
+ *     tags: [Process]
  *     requestBody:
  *       required: true
  *       content:
@@ -154,9 +155,122 @@ app.post('/process', async (req, res) => {
 
 /**
  * @swagger
+ * /process/by-trailer-page:
+ *   post:
+ *     summary: Request the download of a trailer using the trailer page
+ *     tags: [Process]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               trailerPage:
+ *                 type: string
+ *                 description: The trailer page
+ *                 example: https://www.netflix.com/title/81223025
+ *                 required: true
+ *               callbackUrl:
+ *                 type: string
+ *                 description: If you provide this url, every time the process status changes, the callback url will receive a POST request with all the process information
+ *                 example: http://example.com
+ *                 required: false
+ *     responses:
+ *       201:
+ *         description: The process was added to the queue
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 processId:
+ *                   type: string
+ *       400:
+ *         description: Invalid parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: Can't find the service for the trailer page
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 availableDomains:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ */
+app.post('/process/by-trailer-page', async (req, res) => {
+    const { trailerPage, callbackUrl } = req.body;
+
+    if (!trailerPage) {
+        return res.status(400).json({
+            message: 'Missing parameters: trailerPage'
+        });
+    }
+
+    if (!trailerPage.startsWith('https://')) {
+        return res.status(400).json({
+            message: 'Invalid parameters: trailerPage'
+        });
+    }
+
+    const service = getServices().find((service) => service.domain === new URL(trailerPage).hostname);
+
+    if (!service) {
+        return res.status(404).json({
+            message: `Can't find the service for the trailer page: ${trailerPage}`,
+            availableDomains: getServices().map((service) => service.domain)
+        })
+    }
+
+    const processes = await db
+        .insert(processSchema)
+        .values({
+            status: PROCESS_STATUS.PENDING,
+            serviceName: service.name,
+            statusDetails: 'Process was created and is in queue',
+            services: service.name,
+            callbackUrl,
+            name: null,
+            year: null,
+            isCompleted: 0,
+            trailerPage,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        })
+        .returning()
+    const process = processes[0];
+
+    queue.push({
+        name: null,
+        year: null,
+        processId: process.id,
+        services: [service],
+        callbackUrl,
+        trailerPage
+    })
+
+    res.status(201).json({
+        processId: process.id
+    })
+})
+
+/**
+ * @swagger
  * /process/{processId}:
  *   get:
  *     summary: Get the status of a process
+ *     tags: [Process]
  *     parameters:
  *       - name: processId
  *         in: path
@@ -242,6 +356,7 @@ app.get('/process/:processId', async (req, res) => {
  * /services:
  *   get:
  *     summary: Get the list of services
+ *     tags: [Services]
  *     responses:
  *       200:
  *         description: The list of services
@@ -254,9 +369,11 @@ app.get('/process/:processId', async (req, res) => {
  *                 properties:
  *                   name:
  *                     type: string
+ *                   domain:
+ *                     type: string
  */
 app.get('/services', async (req, res) => {
-    res.json([{ name: "ALL" }, ...getServices().map((service) => ({ name: service.name }))]);
+    res.json([{ name: "ALL", domain: 'EACH_SERVICE_DOMAIN' }, ...getServices().map((service) => ({ name: service.name, domain: service.domain }))]);
 })
 
 /**
@@ -264,6 +381,7 @@ app.get('/services', async (req, res) => {
  * /all-status:
  *   get:
  *     summary: Get all the status that a process can have
+ *     tags: [Extra]
  *     responses:
  *       200:
  *         description: The list of status

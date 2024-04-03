@@ -2,6 +2,7 @@ import axios from "axios";
 import fs from "node:fs";
 import path from "node:path";
 import { v4 as uuid } from "uuid";
+import { logPercent } from "./utils/log.js";
 
 const API_BASE_URL = 'https://filebin.net';
 
@@ -17,7 +18,14 @@ export async function tempUpload(filePath) {
             'Content-Length': stats.size
         },
         maxBodyLength: Infinity,
-        timeout: 100000
+        timeout: 100000,
+        onUploadProgress: (progress) => {
+            logPercent({
+                id: `temp-upload-${fileName}`,
+                total: stats.size,
+                loaded: progress.loaded,
+            });
+        }
     })
 
     return fileUrl

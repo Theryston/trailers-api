@@ -10,12 +10,11 @@ export default async function downloadFromPlaylist({
 	playlist,
 	resultVideoPath,
 	videoNumber,
-	name,
 }) {
 	try {
 		log({
 			type: 'INFO',
-			message: `Apple TV | ${name} | Getting playlist m3u8 data of trailer ${videoNumber}`,
+			message: `Apple TV | Getting playlist m3u8 data of trailer ${videoNumber}`,
 		});
 
 		const playlistResponse = await fetch(playlist);
@@ -74,7 +73,7 @@ export default async function downloadFromPlaylist({
 
 		log({
 			type: 'INFO',
-			message: `Apple TV | ${name} | Getting audio and video m3u8 data of trailer ${videoNumber}`,
+			message: `Apple TV | Getting audio and video m3u8 data of trailer ${videoNumber}`,
 		});
 		const videoPlaylistResponse = await fetch(videoPlaylistM3u8.uri);
 		const audioPlaylistResponse = await fetch(audioPlaylistM3u8.uri);
@@ -126,14 +125,14 @@ export default async function downloadFromPlaylist({
 
 		log({
 			type: 'INFO',
-			message: `Apple TV | ${name} | Downloading audio and video of trailer ${videoNumber}`,
+			message: `Apple TV | Downloading audio and video of trailer ${videoNumber}`,
 		});
 		const videoTempPath = path.join(tempDir, `${Date.now()}-video.mp4`);
 		for (let i = 0; i < videoPartsUrl.length; i++) {
 			logPercent({
 				total: videoPartsUrl.length,
 				loaded: i + 1,
-				id: `Apple TV | ${name} | Downloading video of trailer ${videoNumber}`,
+				id: `Apple TV | Downloading video of trailer ${videoNumber}`,
 			});
 
 			const videoPartUrl = videoPartsUrl[i];
@@ -145,14 +144,14 @@ export default async function downloadFromPlaylist({
 
 		log({
 			type: 'INFO',
-			message: `Apple TV | ${name} | Downloading audio of trailer ${videoNumber}`,
+			message: `Apple TV | Downloading audio of trailer ${videoNumber}`,
 		});
 		let audioBlob = new Blob();
 		for (let i = 0; i < audioPartsUrl.length; i++) {
 			logPercent({
 				total: audioPartsUrl.length,
 				loaded: i + 1,
-				id: `Apple TV | ${name} | Downloading audio of trailer ${videoNumber}`,
+				id: `Apple TV | Downloading audio of trailer ${videoNumber}`,
 			});
 
 			const audioPartUrl = audioPartsUrl[i];
@@ -167,7 +166,7 @@ export default async function downloadFromPlaylist({
 
 		log({
 			type: 'INFO',
-			message: `Apple TV | ${name} | Merging audio and video of trailer ${videoNumber}`,
+			message: `Apple TV | Merging audio and video of trailer ${videoNumber}`,
 		});
 
 		await new Promise((resolve, reject) => {
@@ -180,20 +179,20 @@ export default async function downloadFromPlaylist({
 					logPercent({
 						total: 100,
 						loaded: progress.percent || 0,
-						id: `Apple TV | ${name} | Merging audio and video of trailer ${videoNumber}`,
+						id: `Apple TV | Merging audio and video of trailer ${videoNumber}`,
 					});
 				})
 				.on('end', () => {
 					log({
 						type: 'INFO',
-						message: `Apple TV | ${name} | Trailer ${videoNumber} was downloaded!`,
+						message: `Apple TV | Trailer ${videoNumber} was downloaded!`,
 					});
 					resolve();
 				})
 				.on('error', (error) => {
 					log({
 						type: 'ERROR',
-						message: `Apple TV | ${name} | Error while merging audio and video of trailer ${videoNumber}: ${JSON.stringify(
+						message: `Apple TV | Error while merging audio and video of trailer ${videoNumber}: ${JSON.stringify(
 							error
 						)}`,
 					});
@@ -204,7 +203,7 @@ export default async function downloadFromPlaylist({
 
 		log({
 			type: 'INFO',
-			message: `Apple TV | ${name} | Removing temp files of trailer ${videoNumber}`,
+			message: `Apple TV | Removing temp files of trailer ${videoNumber}`,
 		});
 		fs.unlinkSync(videoTempPath);
 		fs.unlinkSync(audioTempPath);
