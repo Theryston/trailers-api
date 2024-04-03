@@ -39,7 +39,7 @@ continueProcess(queue);
  *               serviceName:
  *                 type: string
  *                 description: The name of the service (You can get it from the list of services)
- *                 example: APPLE_TV
+ *                 example: ALL
  *               name:
  *                 type: string
  *                 description: The name of the movie or tv show
@@ -224,7 +224,7 @@ app.post('/process/by-trailer-page', async (req, res) => {
         });
     }
 
-    const service = getServices().find((service) => service.domain === new URL(trailerPage).hostname);
+    const service = getServices().find((service) => new URL(trailerPage).hostname.includes(service.domain));
 
     if (!service) {
         return res.status(404).json({
@@ -369,11 +369,20 @@ app.get('/process/:processId', async (req, res) => {
  *                 properties:
  *                   name:
  *                     type: string
+ *                   friendlyName:
+ *                     type: string
  *                   domain:
  *                     type: string
  */
 app.get('/services', async (req, res) => {
-    res.json([{ name: "ALL", domain: 'EACH_SERVICE_DOMAIN' }, ...getServices().map((service) => ({ name: service.name, domain: service.domain }))]);
+    let allServices = getServices();
+    allServices = allServices.map((service) => {
+        delete service.func;
+
+        return service;
+    })
+
+    res.json(allServices);
 })
 
 /**

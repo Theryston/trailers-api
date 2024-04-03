@@ -5,12 +5,14 @@ export default function getServices() {
   return [
     {
       name: "APPLE_TV",
+      friendlyName: "Apple TV",
       domain: "tv.apple.com",
       func: appleTv,
     },
     {
       name: "NETFLIX",
-      domain: "www.netflix.com",
+      friendlyName: "Netflix",
+      domain: "netflix.com",
       func: netflix,
     },
   ];
