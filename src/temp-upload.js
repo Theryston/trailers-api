@@ -1,22 +1,37 @@
-import axios from "axios";
 import fs from "node:fs";
 import path from "node:path";
 import { v4 as uuid } from "uuid";
+import { S3Client, PutObjectAclCommand } from "@aws-sdk/client-s3";
+import mime from "mime-types";
 
-const API_BASE_URL = 'https://filebin.net';
+const s3Client = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    }
+})
 
 export async function tempUpload(filePath) {
     const file = fs.createReadStream(filePath);
     const stats = fs.statSync(filePath);
     const fileName = path.basename(filePath);
-    const bin = uuid();
+    const mimeType = mime.lookup(filePath);
+    const id = uuid();
+    const key = path.join(id, fileName);
 
-    const fileUrl = `${API_BASE_URL}/${bin}/${fileName}`;
-    await axios.post(fileUrl, file, {
-        headers: {
-            'Content-Length': stats.size
-        },
-    })
+    const putCommand = new PutObjectAclCommand({
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
+        Key: key,
+        ACL: 'public-read',
+        Body: file,
+        ContentType: mimeType || 'application/octet-stream',
+        ContentLength: stats.size,
+    });
 
-    return fileUrl
+    await s3Client.send(putCommand);
+
+    const url = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+
+    return url;
 }
