@@ -17,8 +17,6 @@ export async function tempUpload(filePath) {
         headers: {
             'Content-Length': stats.size
         },
-        maxBodyLength: Infinity,
-        timeout: Infinity,
     })
 
     return fileUrl
