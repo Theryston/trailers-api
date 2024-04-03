@@ -2,7 +2,6 @@ import axios from "axios";
 import fs from "node:fs";
 import path from "node:path";
 import { v4 as uuid } from "uuid";
-import { logPercent } from "./utils/log.js";
 
 const API_BASE_URL = 'https://filebin.net';
 

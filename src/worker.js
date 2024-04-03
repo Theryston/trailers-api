@@ -1,5 +1,4 @@
 import path from "path";
-import slug from "slug";
 import fs from "node:fs";
 import { GLOBAL_TEMP_FOLDER, PROCESS_STATUS } from "./constants.js";
 import processLog from "./utils/process-log.js";
@@ -13,16 +12,7 @@ export default async function worker({ name, year, processId, services, callback
     await processLog({ id: processId, status: PROCESS_STATUS.PROCESSING, description: 'Process was started', callbackUrl });
 
     const outPath = path.join(GLOBAL_TEMP_FOLDER, processId);
-
-    if (!fs.existsSync(outPath)) {
-      fs.mkdirSync(outPath);
-    }
-
-    if (fs.existsSync(outPath)) {
-      fs.rmSync(outPath, { recursive: true, force: true });
-    }
-
-    fs.mkdirSync(outPath);
+    fs.mkdirSync(outPath, { recursive: true });
 
     let foundTrailers = null;
 
@@ -54,10 +44,6 @@ export default async function worker({ name, year, processId, services, callback
     }
 
     if (!foundTrailers) {
-      if (fs.existsSync(outPath)) {
-        fs.rmSync(outPath, { recursive: true });
-      }
-
       await processLog({ id: processId, status: PROCESS_STATUS.NO_TRAILERS, description: 'Trailers not found. Try again with another title variation', callbackUrl });
       return;
     }

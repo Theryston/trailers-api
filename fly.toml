@@ -15,5 +15,5 @@ cpu_kind = 'shared'
 cpus = 4
 
 [mounts]
-source = "data"
-destination = "/app/data"
+source = "process"
+destination = "/app/process"
