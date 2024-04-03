@@ -7,11 +7,15 @@ export default async function findProcess(id) {
         .select()
         .from(processSchema)
         .where(eq(processSchema.id, id))
-        .leftJoin(trailersSchema, eq(processSchema.id, trailersSchema.processId))
 
-    if (!currentProcess.process) {
+    if (!currentProcess) {
         return null
     }
 
-    return { ...currentProcess.process, trailers: currentProcess.trailers || [] };
+    const trailers = await db
+        .select()
+        .from(trailersSchema)
+        .where(eq(trailersSchema.processId, id))
+
+    return { ...currentProcess, trailers };
 }
