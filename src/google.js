@@ -9,5 +9,5 @@ export default async function google(term) {
         q: term,
     })
 
-    return res.data.items;
+    return res.data.items || [];
 }
