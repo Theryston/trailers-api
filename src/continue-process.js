@@ -21,7 +21,8 @@ export default async function continueProcess(queue) {
             processId: process.id,
             services,
             callbackUrl: process.callbackUrl,
-            trailerPage: process.trailerPage
+            trailerPage: process.trailerPage,
+            lang: process.lang
         })
 
         log({

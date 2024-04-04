@@ -5,10 +5,12 @@ import saveBlobFile from '../../utils/saveBlobFile.js';
 import { log, logPercent } from '../../utils/log.js';
 import ffmpeg from '../../utils/ffmpeg.js';
 import { GLOBAL_TEMP_FOLDER } from '../../constants.js';
+import compareLang from '../../utils/compre-lang.js';
 
 export default async function downloadFromPlaylist({
 	playlist,
 	resultVideoPath,
+	lang,
 	videoNumber,
 }) {
 	try {
@@ -63,7 +65,7 @@ export default async function downloadFromPlaylist({
 			];
 
 		let audioPlaylistM3u8 = Object.values(audioPlaylistM3u8Language).find(
-			(al) => al.language === 'pt-BR'
+			(al) => compareLang(al.language, lang)
 		);
 
 		if (!audioPlaylistM3u8) {

@@ -9,8 +9,9 @@ import ffmpeg from '../../utils/ffmpeg.js';
 import { GLOBAL_TEMP_FOLDER } from '../../constants.js';
 import normalizeText from '../../utils/normalizeText.js';
 import google from '../../google.js';
+import compareLang from '../../utils/compre-lang.js';
 
-export default async function netflix({ name, year, outPath, trailerPage, onTrailerFound }) {
+export default async function netflix({ name, year, outPath, trailerPage, onTrailerFound, lang }) {
   log({
     type: 'INFO',
     message: `Netflix | Opening browser`,
@@ -213,7 +214,7 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
 
       const body = await response.json();
       let audioTrack = body.result.audio_tracks.find(
-        (at) => at.language === 'pt-BR' && at.streams && at.streams.length
+        (at) => compareLang(at.language, lang) && at.streams && at.streams.length
       );
 
       if (!audioTrack) {

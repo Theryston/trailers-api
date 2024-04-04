@@ -12,6 +12,7 @@ export const processSchema = sqliteTable('process', {
     services: text('services').notNull(),
     name: text('name'),
     year: integer('year'),
+    lang: text('lang'),
     trailerPage: text('trailer_page'),
     callbackUrl: text('callback_url'),
     callbackError: text('callback_error'),

@@ -10,8 +10,9 @@ import axios from 'axios';
 import downloadFile from '../../utils/downloadFile.js';
 import { GLOBAL_TEMP_FOLDER } from '../../constants.js';
 import ffmpeg from '../../utils/ffmpeg.js';
+import compareLang from '../../utils/compre-lang.js';
 
-export default async function primeVideo({ name, year, outPath, trailerPage, onTrailerFound }) {
+export default async function primeVideo({ name, year, outPath, trailerPage, onTrailerFound, lang }) {
     log({
         type: 'INFO',
         message: `Prime Video | Opening browser`,
@@ -112,7 +113,26 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
         }
 
         const playbackUrls = trailerInfo.playbackUrls;
-        const urlSet = playbackUrls.urlSets[Object.keys(playbackUrls.urlSets)[0]];
+
+        if (!playbackUrls.audioTracks.length) {
+            log({
+                type: 'ERROR',
+                message: `Prime Video | Trailer not found.`,
+            });
+            return false;
+        }
+
+        let audioTrack = playbackUrls.audioTracks.find(aT => compareLang(aT.languageCode, lang));
+
+        if (!audioTrack) {
+            audioTrack = playbackUrls.audioTracks[0];
+        }
+
+        const urlSet = playbackUrls.urlSets[Object.keys(playbackUrls.urlSets).find((key) => {
+            const currentUrlSet = playbackUrls.urlSets[key];
+            return currentUrlSet.urls.manifest.audioTrackId === 'ALL' && currentUrlSet.urls.manifest.videoQuality === 'HD';
+        })];
+
         const mpdUrl = urlSet.urls.manifest.url;
         const baseUrl = path.dirname(mpdUrl);
 
@@ -125,27 +145,29 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
         const representations = $('Representation').toArray().map((representation) => {
             let baseUrl = null;
 
-            // representation.children.find((child) => child.name === 'baseurl')?.children[0].data;
-
             if (representation.children.find((child) => child.name === 'baseurl')) {
                 baseUrl = representation.children.find((child) => child.name === 'baseurl').children[0].data;
             } else {
                 baseUrl = representation.children[0].children.find((child) => child.name === 'baseurl').children[0].data;
             }
+
+            const adaptationSet = $(representation).parent().parent()[0];
+
             return {
                 ...representation,
+                adaptationSet,
                 baseUrl
             }
         });
-
         const videos = representations.filter((representation) => representation.baseUrl?.includes('video'));
         const audios = representations.filter((representation) => representation.baseUrl?.includes('audio'));
+
 
         const biggestVideo = videos.sort((a, b) => {
             return Number(b.attribs.width) - Number(a.attribs.width);
         })[0];
 
-        const audioPath = audios[0]?.baseUrl;
+        const audioPath = audios.find(r => r.adaptationSet.attribs.audiotrackid === audioTrack.audioTrackId)?.baseUrl;
         const videoPath = biggestVideo?.baseUrl;
 
         if (!videoPath || !audioPath) {

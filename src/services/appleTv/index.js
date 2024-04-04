@@ -8,7 +8,7 @@ import { log } from '../../utils/log.js';
 import normalizeText from '../../utils/normalizeText.js';
 import google from '../../google.js';
 
-export default async function appleTv({ name, year, outPath, trailerPage, onTrailerFound }) {
+export default async function appleTv({ name, year, outPath, trailerPage, onTrailerFound, lang }) {
 	log({
 		type: 'INFO',
 		message: `Apple TV | Opening browser`,
@@ -186,6 +186,7 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 			await downloadFromPlaylist({
 				playlist,
 				resultVideoPath,
+				lang,
 				videoNumber: i + 1,
 			});
 

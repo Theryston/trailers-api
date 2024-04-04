@@ -15,6 +15,13 @@
       "when": 1712145667807,
       "tag": "0001_careless_silver_surfer",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1712250999921,
+      "tag": "0002_funny_beyonder",
+      "breakpoints": true
     }
   ]
 }

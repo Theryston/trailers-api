@@ -40,6 +40,10 @@ continueProcess(queue);
  *                 type: string
  *                 description: The name of the service (You can get it from the list of services)
  *                 example: ALL
+ *               lang:
+ *                 type: string
+ *                 description: The language of the trailer
+ *                 example: en-US
  *               name:
  *                 type: string
  *                 description: The name of the movie or tv show
@@ -87,13 +91,17 @@ continueProcess(queue);
  *                     type: string
  */
 app.post('/process', async (req, res) => {
-    const { serviceName, name, year, callbackUrl } = req.body;
+    let { serviceName, name, year, lang, callbackUrl } = req.body;
 
     try {
         if (!name || !year) {
             return res.status(400).json({
                 message: `Missing parameters: name=${name}, year=${year}`
             });
+        }
+
+        if (!lang) {
+            lang = "en-US";
         }
 
         if (!serviceName) {
@@ -123,6 +131,7 @@ app.post('/process', async (req, res) => {
                 callbackUrl,
                 name,
                 year,
+                lang,
                 isCompleted: 0,
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -135,7 +144,8 @@ app.post('/process', async (req, res) => {
             year: String(year),
             processId: process.id,
             services,
-            callbackUrl
+            callbackUrl,
+            lang
         });
 
         res.status(201).json({
@@ -171,6 +181,10 @@ app.post('/process', async (req, res) => {
  *                 description: The trailer page
  *                 example: https://www.netflix.com/title/81223025
  *                 required: true
+ *               lang:
+ *                 type: string
+ *                 description: The language of the trailer
+ *                 example: en-US
  *               callbackUrl:
  *                 type: string
  *                 description: If you provide this url, every time the process status changes, the callback url will receive a POST request with all the process information
@@ -210,7 +224,11 @@ app.post('/process', async (req, res) => {
  *                     type: string
  */
 app.post('/process/by-trailer-page', async (req, res) => {
-    const { trailerPage, callbackUrl } = req.body;
+    let { trailerPage, lang, callbackUrl } = req.body;
+
+    if (!lang) {
+        lang = "en-US";
+    }
 
     if (!trailerPage) {
         return res.status(400).json({
@@ -241,6 +259,7 @@ app.post('/process/by-trailer-page', async (req, res) => {
             statusDetails: 'Process was created and is in queue',
             services: service.name,
             callbackUrl,
+            lang,
             name: null,
             year: null,
             isCompleted: 0,
@@ -257,7 +276,8 @@ app.post('/process/by-trailer-page', async (req, res) => {
         processId: process.id,
         services: [service],
         callbackUrl,
-        trailerPage
+        trailerPage,
+        lang
     })
 
     res.status(201).json({
@@ -298,6 +318,8 @@ app.post('/process/by-trailer-page', async (req, res) => {
  *                 services:
  *                   type: string
  *                 name:
+ *                   type: string
+ *                 lang:
  *                   type: string
  *                 year:
  *                   type: number

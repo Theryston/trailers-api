@@ -1,0 +1,1 @@
+ALTER TABLE process ADD `lang` text;
