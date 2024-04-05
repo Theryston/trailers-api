@@ -130,7 +130,7 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
 
         const urlSet = playbackUrls.urlSets[Object.keys(playbackUrls.urlSets).find((key) => {
             const currentUrlSet = playbackUrls.urlSets[key];
-            return currentUrlSet.urls.manifest.audioTrackId === 'ALL' && currentUrlSet.urls.manifest.videoQuality === 'HD';
+            return (currentUrlSet.urls.manifest.audioTrackId === audioTrack.audioTrackId || currentUrlSet.urls.manifest.audioTrackId === 'ALL' || !currentUrlSet.urls.manifest.audioTrackId) && currentUrlSet.urls.manifest.videoQuality === 'HD';
         })];
 
         const mpdUrl = urlSet.urls.manifest.url;
