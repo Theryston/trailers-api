@@ -10,6 +10,7 @@ import google from '../../google.js';
 import compareLang from '../../utils/compre-lang.js';
 import { load as loadCheerio } from 'cheerio';
 import axios from 'axios';
+import fixEscapeHex from '../../utils/fix-escape-hex.js';
 
 export default async function netflix({ name, year, outPath, trailerPage, onTrailerFound, lang }) {
   log({
@@ -211,8 +212,3 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
   }
 }
 
-function fixEscapeHex(jsonString) {
-  return jsonString.replace(/\\x([0-9A-Fa-f]{2})/g, function (match, hex) {
-    return String.fromCharCode(parseInt(hex, 16));
-  });
-}
