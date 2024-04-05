@@ -54,7 +54,7 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
     }
 
     const { data: netflixPage, headers: netflixHeaders } = await axios.get(trailerPage);
-    const netflixIdCookie = netflixHeaders['set-cookie'].find(c => c.startsWith('NetflixId'));
+    const netflixCookies = netflixHeaders['set-cookie'].join('; ');
 
     const $ = loadCheerio(netflixPage);
     const dataScript = $('script').toArray().find((script) => script.children[0]?.data.includes('window.netflix')).children[0]?.data;
@@ -96,7 +96,7 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
 
       const { data: trailerInfos } = await axios.post(`https://www.netflix.com/playapi/cadmium/manifest/1`, trailerRequestData, {
         headers: {
-          Cookie: netflixIdCookie,
+          Cookie: netflixCookies,
         }
       });
 
