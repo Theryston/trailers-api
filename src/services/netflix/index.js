@@ -1,33 +1,21 @@
-import puppeteer from 'puppeteer';
 import downloadFile from '../../utils/downloadFile.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import slug from 'slug';
-import locateChrome from 'locate-chrome';
 import { log, logPercent } from '../../utils/log.js';
 import ffmpeg from '../../utils/ffmpeg.js';
 import { GLOBAL_TEMP_FOLDER } from '../../constants.js';
 import normalizeText from '../../utils/normalizeText.js';
 import google from '../../google.js';
 import compareLang from '../../utils/compre-lang.js';
+import { load as loadCheerio } from 'cheerio';
+import axios from 'axios';
 
 export default async function netflix({ name, year, outPath, trailerPage, onTrailerFound, lang }) {
   log({
     type: 'INFO',
-    message: `Netflix | Opening browser`,
+    message: `Netflix | Starting...`,
   });
-
-  const executablePath = await locateChrome();
-  const browser = await puppeteer.launch({
-    executablePath,
-    headless: 'new',
-    args: ['--no-sandbox'],
-  });
-
-  const page = await browser.newPage();
-  await page.setUserAgent(
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.124 Safari/537.36 Edg/102.0.1245.44'
-  );
 
   try {
     if (!trailerPage) {
@@ -52,7 +40,6 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
       trailerPage = program?.link;
 
       if (!trailerPage) {
-        browser.close();
         log({
           type: 'ERROR',
           message: `Netflix | Trailer not found.`,
@@ -65,174 +52,73 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
       onTrailerFound(trailerPage);
     }
 
-    log({
-      type: 'INFO',
-      message: `Netflix | Opening the Netflix page`,
-    });
+    const { data: netflixPage, headers: netflixHeaders } = await axios.get(trailerPage);
+    const netflixIdCookie = netflixHeaders['set-cookie'].find(c => c.startsWith('NetflixId'));
 
-    await page.goto(trailerPage);
+    const $ = loadCheerio(netflixPage);
+    const dataScript = $('script').toArray().find((script) => script.children[0]?.data.includes('window.netflix')).children[0]?.data;
+    const [_, dataStrRaw] = dataScript.split('reactContext =');
+    const dataStr = dataStrRaw.trim().slice(0, -1)
+    const data = JSON.parse(fixEscapeHex(dataStr));
+    const trailers = data.models.nmTitleUI.data.sectionData.find(s => s.type === 'additionalVideos')?.data.supplementalVideos || [];
 
-    log({
-      type: 'INFO',
-      message: `Netflix | Verifying if has trailers`,
-    });
-
-    try {
-      await page.waitForSelector('.nmtitle-section.section-additional-videos', {
-        timeout: 10000,
-      });
-    } catch (error) {
-      browser.close();
+    if (!trailers.length) {
       log({
         type: 'ERROR',
         message: `Netflix | Trailer not found.`,
       });
       return false;
     }
-
-    let trailersSection = await page.$(
-      '.nmtitle-section.section-additional-videos'
-    );
-
-    if (!trailersSection) {
-      browser.close();
-      log({
-        type: 'ERROR',
-        message: `Netflix | Trailer not found.`,
-      });
-      return false;
-    }
-
-    let ul = await trailersSection.$('ul');
-    let arrayLi = await ul.$$('li');
-    const liOrder = [];
-
-    for (let i = 0; i < arrayLi.length; i++) {
-      let videoTitle = await arrayLi[i].$('.additional-video-title');
-      videoTitle = await videoTitle.evaluate((el) => el.textContent);
-      liOrder.push({
-        videoTitle,
-        index: i,
-      });
-    }
-
-    if (!arrayLi.length) {
-      browser.close();
-      log({
-        type: 'ERROR',
-        message: `Netflix | Trailer not found.`,
-      });
-      return false;
-    }
-
-    log({
-      type: 'INFO',
-      message: `Netflix | Preparing requests observer`,
-    });
-    await page.setRequestInterception(true);
-
-    page.on('request', (request) => {
-      if (
-        request.url().indexOf('https://www.netflix.com/playapi') !== -1 &&
-        request.method() === 'POST'
-      ) {
-        const body = JSON.parse(request.postData());
-        const hasProfile = body.params.profiles.some(
-          (profile) => profile === 'playready-h264mpl40-dash'
-        );
-        const locate = new Intl.Locale(lang);
-        const langStr = `${locate.language}-${locate.region || 'US'}`;
-
-        if (hasProfile) {
-          request.continue({
-            postData: JSON.stringify({
-              ...body,
-              languages: [langStr],
-            }),
-          });
-        } else {
-          request.continue({
-            postData: JSON.stringify({
-              ...body,
-              languages: [langStr],
-              params: {
-                ...body.params,
-                profiles: [...body.params.profiles, 'playready-h264mpl40-dash'],
-              },
-            }),
-          });
-        }
-      } else {
-        request.continue();
-      }
-    });
 
     const downloadedVideos = [];
-    for (let i = 0; i < arrayLi.length; i++) {
+    for (let i = 0; i < trailers.length; i++) {
       log({
         type: 'INFO',
-        message: `Netflix | Opening trailer ${i + 1}`,
-      });
-      trailersSection = await page.$(
-        '.nmtitle-section.section-additional-videos'
-      );
+        message: `Netflix | Processing trailer ${i + 1}`,
+      })
 
-      ul = await trailersSection.$('ul');
-      arrayLi = await ul.$$('li');
+      const trailer = trailers[i];
+      const videoTitle = trailer.title;
 
-      for (let i = 0; i < arrayLi.length; i++) {
-        let videoTitle = await arrayLi[i].$('.additional-video-title');
-        videoTitle = await videoTitle.evaluate((el) => el.textContent);
+      const locate = new Intl.Locale(lang);
+      const langStr = `${locate.language}-${locate.region || 'US'}`;
 
-        let correspondingOrder = liOrder.find(
-          (order) => order.videoTitle === videoTitle
-        );
-
-        if (correspondingOrder) {
-          arrayLi[i].orderIndex = correspondingOrder.index;
+      const trailerRequestData = {
+        version: 2,
+        url: 'manifest',
+        languages: [langStr],
+        params: {
+          viewableId: trailer.id,
+          profiles: ['heaac-2-dash', 'playready-h264mpl40-dash'],
         }
       }
 
-      arrayLi.sort((a, b) => a.orderIndex - b.orderIndex);
-
-      await page.evaluate(() => {
-        const trailersSection = document.querySelector(
-          '.nmtitle-section.section-additional-videos'
-        );
-        trailersSection.scrollIntoView();
-      });
-
-      let videoTitle = await arrayLi[i].$('.additional-video-title');
-      videoTitle = await videoTitle.evaluate((el) => el.textContent);
-
-      const button = await arrayLi[i].$('button');
-      await button.click();
-
-      log({
-        type: 'INFO',
-        message: `Netflix | Waiting for trailer ${i + 1} to load`,
-      });
-      const response = await page.waitForResponse(
-        (response) =>
-          response.url().indexOf('https://www.netflix.com/playapi') !== -1,
-        {
-          timeout: 10000,
+      const { data: trailerInfos } = await axios.post(`https://www.netflix.com/playapi/cadmium/manifest/1`, trailerRequestData, {
+        headers: {
+          Cookie: netflixIdCookie,
         }
-      );
+      });
 
-      const body = await response.json();
-      let audioTrack = body.result.audio_tracks.find(
+      if (!trailerInfos.result) {
+        log({
+          type: 'ERROR',
+          message: `Netflix | Trailer not found.`,
+        });
+        return false;
+      }
+
+      let audioTrack = trailerInfos.result.audio_tracks.find(
         (at) => compareLang(at.language, lang) && at.streams && at.streams.length
       );
 
       if (!audioTrack) {
-        audioTrack = body.result.audio_tracks.find(
+        audioTrack = trailerInfos.result.audio_tracks.find(
           (at) => at.streams && at.streams.length
         );
       }
 
       const audioUrl = audioTrack.streams[0].urls[0].url;
-      const biggestVideo = body.result.video_tracks[0].streams.reduce(
+      const biggestVideo = trailerInfos.result.video_tracks[0].streams.reduce(
         (prev, current) => {
           if (current.bitrate > prev.bitrate) {
             return current;
@@ -266,7 +152,6 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
       });
 
       const resultVideoPath = path.join(outPath, `${slug(videoTitle)}.mp4`);
-
 
       try {
         await new Promise((resolve, reject) => {
@@ -308,18 +193,14 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
       });
       fs.unlinkSync(videoTempPath);
       fs.unlinkSync(audioTempPath);
-
-      await page.reload();
     }
 
-    browser.close();
     log({
       type: 'INFO',
       message: `Netflix | All trailers downloaded`,
     });
     return downloadedVideos;
   } catch (error) {
-    browser.close();
     log({
       type: 'ERROR',
       message: `Netflix | Something went wrong`,
@@ -328,4 +209,10 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
     console.log(error);
     return false;
   }
+}
+
+function fixEscapeHex(jsonString) {
+  return jsonString.replace(/\\x([0-9A-Fa-f]{2})/g, function (match, hex) {
+    return String.fromCharCode(parseInt(hex, 16));
+  });
 }
