@@ -1,12 +1,10 @@
 import downloadFromPlaylist from './downloadFromPlaylist.js';
 import path from 'node:path';
-import fs from 'node:fs';
 import { log } from '../../utils/log.js';
 import normalizeText from '../../utils/normalizeText.js';
 import google from '../../google.js';
 import axios from 'axios';
 import { load as loadCheerio } from 'cheerio';
-import { GLOBAL_TEMP_FOLDER } from '../../constants.js';
 
 export default async function appleTv({ name, year, outPath, trailerPage, onTrailerFound, lang }) {
 	log({
@@ -76,7 +74,6 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 			return false;
 		}
 
-		const tempDir = fs.mkdtempSync(path.join(GLOBAL_TEMP_FOLDER, 'apple-tv-'));
 		const downloadedVideos = [];
 		for (let i = 0; i < trailers.length; i++) {
 			const trailer = trailers[i];
@@ -87,7 +84,6 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 				resultVideoPath,
 				lang,
 				videoNumber: i + 1,
-				tempDir
 			});
 
 			downloadedVideos.push({

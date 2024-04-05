@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import saveBlobFile from '../../utils/saveBlobFile.js';
 import { log, logPercent } from '../../utils/log.js';
 import ffmpeg from '../../utils/ffmpeg.js';
+import { GLOBAL_TEMP_FOLDER } from '../../constants.js';
 import compareLang from '../../utils/compre-lang.js';
 
 export default async function downloadFromPlaylist({
@@ -11,7 +12,6 @@ export default async function downloadFromPlaylist({
 	resultVideoPath,
 	lang,
 	videoNumber,
-	tempDir
 }) {
 	try {
 		log({
@@ -122,6 +122,8 @@ export default async function downloadFromPlaylist({
 		const audioPartsUrl = audioPartsPath.map(
 			(partPath) => `${audioPlaylistM3BaseUrl}/${partPath}`
 		);
+
+		const tempDir = fs.mkdtempSync(path.join(GLOBAL_TEMP_FOLDER, 'apple-tv-'));
 
 		log({
 			type: 'INFO',
