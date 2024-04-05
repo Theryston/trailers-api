@@ -1,5 +1,6 @@
 import downloadFromPlaylist from './downloadFromPlaylist.js';
 import path from 'node:path';
+import fs from 'node:fs';
 import { log } from '../../utils/log.js';
 import normalizeText from '../../utils/normalizeText.js';
 import google from '../../google.js';
