@@ -140,13 +140,21 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
         const hasProfile = body.params.profiles.some(
           (profile) => profile === 'playready-h264mpl40-dash'
         );
+        const locate = new Intl.Locale(lang);
+        const langStr = `${locate.language}-${locate.region || 'US'}`;
 
         if (hasProfile) {
-          request.continue();
+          request.continue({
+            postData: JSON.stringify({
+              ...body,
+              languages: [langStr],
+            }),
+          });
         } else {
           request.continue({
             postData: JSON.stringify({
               ...body,
+              languages: [langStr],
               params: {
                 ...body.params,
                 profiles: [...body.params.profiles, 'playready-h264mpl40-dash'],
