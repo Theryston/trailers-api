@@ -1,6 +1,4 @@
-import locateChrome from 'locate-chrome';
 import { log, logPercent } from '../../utils/log.js';
-import puppeteer from 'puppeteer';
 import normalizeText from '../../utils/normalizeText.js';
 import google from '../../google.js';
 import path from 'node:path';
@@ -15,17 +13,8 @@ import compareLang from '../../utils/compre-lang.js';
 export default async function primeVideo({ name, year, outPath, trailerPage, onTrailerFound, lang }) {
     log({
         type: 'INFO',
-        message: `Prime Video | Opening browser`,
+        message: `Prime Video | Starting...`,
     });
-
-    const executablePath = await locateChrome();
-    const browser = await puppeteer.launch({
-        executablePath,
-        headless: 'new',
-        args: ['--no-sandbox'],
-    });
-
-    const page = await browser.newPage();
 
     try {
         if (!trailerPage) {
@@ -48,7 +37,6 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
             trailerPage = program?.link;
 
             if (!trailerPage) {
-                browser.close();
                 log({
                     type: 'ERROR',
                     message: `Prime Video | Trailer not found.`,
@@ -61,21 +49,13 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
             onTrailerFound(trailerPage);
         }
 
-        log({
-            type: 'INFO',
-            message: `Prime Video | Opening the Prime Video page`,
-        });
+        const { data: primeVideoPage } = await axios.get(trailerPage);
+        const $PrimePage = loadCheerio(primeVideoPage);
+        const dataStr = $PrimePage('script[type="text/template"]').toArray().find(script => script.children[0]?.data.includes('props')).children[0]?.data;
+        const data = JSON.parse(dataStr);
+        const titleId = data.props.body[0].args?.titleID
 
-        await page.goto(trailerPage);
-
-        const hasTrailer = await page.evaluate(() => {
-            const trailerButton = Array.from(document.querySelectorAll('a')).find(a => a.href.includes('ref=atv_dp_watch_trailer'));
-
-            return !!trailerButton;
-        })
-
-        if (!hasTrailer) {
-            browser.close();
+        if (!titleId) {
             log({
                 type: 'ERROR',
                 message: `Prime Video | Trailer not found.`,
@@ -83,26 +63,19 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
             return false;
         }
 
-        log({
-            type: 'INFO',
-            message: `Prime Vídeo | Preparing requests observer`,
+        const { data: trailerInfo } = await axios.get(`https://atv-ps.primevideo.com/cdp/catalog/GetPlaybackResources`, {
+            params: {
+                deviceTypeID: 'AOAGZA014O5RE',
+                firmware: 1,
+                consumptionType: 'Streaming',
+                desiredResources: 'PlaybackUrls',
+                resourceUsage: 'ImmediateConsumption',
+                videoMaterialType: 'Trailer',
+                titleId,
+                audioTrackId: 'ALL',
+                deviceStreamingTechnologyOverride: 'DASH',
+            },
         });
-
-        const response = await page.waitForResponse((response) => {
-            const url = response.url();
-            return url.includes('GetPlaybackResources') && url.includes('audioTrackId');
-        }, {
-            timeout: 10000
-        })
-
-        const trailerInfo = await response.json()
-
-        log({
-            type: 'INFO',
-            message: `Prime Video | Closing browser`,
-        })
-
-        await browser.close();
 
         if (!trailerInfo) {
             log({
@@ -112,9 +85,17 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
             return false;
         }
 
+        if (trailerInfo.error) {
+            log({
+                type: 'ERROR',
+                message: `Prime Video | Trailer not found.`,
+            });
+            return false;
+        }
+
         const playbackUrls = trailerInfo.playbackUrls;
 
-        if (!playbackUrls.audioTracks.length) {
+        if (!playbackUrls.audioTracks?.length) {
             log({
                 type: 'ERROR',
                 message: `Prime Video | Trailer not found.`,
@@ -241,7 +222,6 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
             }
         ]
     } catch (error) {
-        browser.close();
         log({
             type: 'ERROR',
             message: `Prime Video | Something went wrong`,

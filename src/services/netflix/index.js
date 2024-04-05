@@ -72,6 +72,8 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
     }
 
     const downloadedVideos = [];
+    const tempDir = fs.mkdtempSync(path.join(GLOBAL_TEMP_FOLDER, 'netflix-'));
+
     for (let i = 0; i < trailers.length; i++) {
       log({
         type: 'INFO',
@@ -128,8 +130,6 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
         }
       );
       const videoUrl = biggestVideo.urls[0].url;
-
-      const tempDir = fs.mkdtempSync(path.join(GLOBAL_TEMP_FOLDER, 'netflix-'));
 
       const videoTempPath = path.join(tempDir, `${Date.now()}-video.mp4`);
       const audioTempPath = path.join(tempDir, `${Date.now()}-audio.mp4`);
