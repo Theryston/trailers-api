@@ -41,19 +41,19 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 				});
 				return false;
 			}
+
+			const trailerPageUrlObj = new URL(trailerPage);
+			const locate = ((new Intl.Locale(lang)).region || 'us').toLowerCase();
+
+			if (trailerPageUrlObj.pathname.startsWith('/show') || trailerPageUrlObj.pathname.startsWith('/movie')) {
+				trailerPageUrlObj.pathname = `/${locate}${trailerPageUrlObj.pathname}`;
+			} else {
+				const noLocatePathname = trailerPageUrlObj.pathname.split('/').filter(p => p).slice(1).join('/');
+				trailerPageUrlObj.pathname = `/${locate}/${noLocatePathname}`;
+			}
+
+			trailerPage = trailerPageUrlObj.toString();
 		}
-
-		const trailerPageUrlObj = new URL(trailerPage);
-		const locate = ((new Intl.Locale(lang)).region || 'us').toLowerCase();
-
-		if (trailerPageUrlObj.pathname.startsWith('/show') || trailerPageUrlObj.pathname.startsWith('/movie')) {
-			trailerPageUrlObj.pathname = `/${locate}${trailerPageUrlObj.pathname}`;
-		} else {
-			const noLocatePathname = trailerPageUrlObj.pathname.split('/').filter(p => p).slice(1).join('/');
-			trailerPageUrlObj.pathname = `/${locate}/${noLocatePathname}`;
-		}
-
-		trailerPage = trailerPageUrlObj.toString();
 
 		if (onTrailerFound) {
 			onTrailerFound(trailerPage);
