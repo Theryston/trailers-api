@@ -7,7 +7,7 @@ import { tempUpload } from "./temp-upload.js";
 import db from "./db/index.js";
 import { trailersSchema } from "./db/schema.js";
 
-export default async function worker({ name, year, processId, services, callbackUrl, trailerPage, lang }) {
+export default async function worker({ name, year, processId, services, callbackUrl, trailerPage, lang, fullAudioTracks }) {
   try {
     await processLog({ id: processId, status: PROCESS_STATUS.PROCESSING, description: 'Process was started', callbackUrl });
 
@@ -26,6 +26,7 @@ export default async function worker({ name, year, processId, services, callback
           outPath,
           trailerPage,
           lang,
+          fullAudioTracks,
           onTrailerFound: async (foundTrailerPage) => {
             processLog({ id: processId, status: PROCESS_STATUS.TRYING_TO_DOWNLOAD, description: `Trying to download the trailers from: ${service.name}`, trailerPage: foundTrailerPage, callbackUrl });
           }

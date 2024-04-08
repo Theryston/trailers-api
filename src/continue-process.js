@@ -22,7 +22,8 @@ export default async function continueProcess(queue) {
             services,
             callbackUrl: process.callbackUrl,
             trailerPage: process.trailerPage,
-            lang: process.lang
+            lang: process.lang,
+            fullAudioTracks: process.fullAudioTracks
         })
 
         log({

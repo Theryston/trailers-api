@@ -44,6 +44,10 @@ continueProcess(queue);
  *                 type: string
  *                 description: The language of the trailer
  *                 example: en-US
+ *               fullAudioTracks:
+ *                 type: boolean
+ *                 description: If you want to create a multi-audio video trailer with all the available audio tracks
+ *                 example: true
  *               name:
  *                 type: string
  *                 description: The name of the movie or tv show
@@ -91,7 +95,7 @@ continueProcess(queue);
  *                     type: string
  */
 app.post('/process', async (req, res) => {
-    let { serviceName, name, year, lang, callbackUrl } = req.body;
+    let { serviceName, name, year, lang, callbackUrl, fullAudioTracks } = req.body;
 
     try {
         if (!name || !year) {
@@ -133,6 +137,7 @@ app.post('/process', async (req, res) => {
                 year,
                 lang,
                 isCompleted: 0,
+                fullAudioTracks: fullAudioTracks ? 1 : 0,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             })
@@ -145,7 +150,8 @@ app.post('/process', async (req, res) => {
             processId: process.id,
             services,
             callbackUrl,
-            lang
+            lang,
+            fullAudioTracks: fullAudioTracks ? 1 : 0
         });
 
         res.status(201).json({
@@ -185,6 +191,10 @@ app.post('/process', async (req, res) => {
  *                 type: string
  *                 description: The language of the trailer
  *                 example: en-US
+ *               fullAudioTracks:
+ *                 type: boolean
+ *                 description: If you want to create a multi-audio video trailer with all the available audio tracks
+ *                 example: true
  *               callbackUrl:
  *                 type: string
  *                 description: If you provide this url, every time the process status changes, the callback url will receive a POST request with all the process information
@@ -224,7 +234,7 @@ app.post('/process', async (req, res) => {
  *                     type: string
  */
 app.post('/process/by-trailer-page', async (req, res) => {
-    let { trailerPage, lang, callbackUrl } = req.body;
+    let { trailerPage, lang, callbackUrl, fullAudioTracks } = req.body;
 
     if (!lang) {
         lang = "en-US";
@@ -264,6 +274,7 @@ app.post('/process/by-trailer-page', async (req, res) => {
             year: null,
             isCompleted: 0,
             trailerPage,
+            fullAudioTracks: fullAudioTracks ? 1 : 0,
             createdAt: new Date(),
             updatedAt: new Date(),
         })
@@ -277,7 +288,8 @@ app.post('/process/by-trailer-page', async (req, res) => {
         services: [service],
         callbackUrl,
         trailerPage,
-        lang
+        lang,
+        fullAudioTracks: fullAudioTracks ? 1 : 0
     })
 
     res.status(201).json({

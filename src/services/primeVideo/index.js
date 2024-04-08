@@ -10,7 +10,7 @@ import { GLOBAL_TEMP_FOLDER } from '../../constants.js';
 import ffmpeg from '../../utils/ffmpeg.js';
 import compareLang from '../../utils/compre-lang.js';
 
-export default async function primeVideo({ name, year, outPath, trailerPage, onTrailerFound, lang }) {
+export default async function primeVideo({ name, year, outPath, trailerPage, onTrailerFound, lang, fullAudioTracks }) {
     log({
         type: 'INFO',
         message: `Prime Video | Starting...`,
@@ -148,10 +148,17 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
             return Number(b.attribs.width) - Number(a.attribs.width);
         })[0];
 
-        const audioPath = audios.find(r => r.adaptationSet.attribs.audiotrackid === audioTrack.audioTrackId)?.baseUrl;
+        const audiosPath = [];
+
+        if (fullAudioTracks) {
+            audiosPath.push(...audios.map(r => r.baseUrl));
+        } else {
+            audiosPath.push(audios.find(r => r.adaptationSet.attribs.audiotrackid === audioTrack.audioTrackId)?.baseUrl);
+        }
+
         const videoPath = biggestVideo?.baseUrl;
 
-        if (!videoPath || !audioPath) {
+        if (!videoPath || !audiosPath.length) {
             log({
                 type: 'ERROR',
                 message: `Prime Video | Trailer not found.`,
@@ -160,12 +167,8 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
         }
 
         const videoUrl = path.join(baseUrl, videoPath);
-        const audioUrl = path.join(baseUrl, audioPath);
-
         const tempDir = fs.mkdtempSync(path.join(GLOBAL_TEMP_FOLDER, 'prime-video-'));
-
         const videoTempPath = path.join(tempDir, `${Date.now()}-video.mp4`);
-        const audioTempPath = path.join(tempDir, `${Date.now()}-audio.mp4`);
 
         log({
             type: 'INFO',
@@ -176,10 +179,22 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
 
         log({
             type: 'INFO',
-            message: `Prime Video | Downloading audio of trailer`,
+            message: `Prime Video | Downloading audios of trailer`,
         })
 
-        await downloadFile(audioUrl, audioTempPath);
+        const downloadedAudios = [];
+        for (const audioPath of audiosPath) {
+            const audioTempPath = path.join(tempDir, `${Date.now()}-audio.mp3`);
+            const audioUrl = path.join(baseUrl, audioPath);
+
+            await downloadFile(audioUrl, audioTempPath);
+            downloadedAudios.push(audioTempPath);
+
+            log({
+                type: 'INFO',
+                message: `Prime Video | Downloaded audio ${audioPath}`,
+            })
+        }
 
         log({
             type: 'INFO',
@@ -189,9 +204,17 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
         const resultVideoPath = path.join(outPath, `trailer.mp4`);
 
         await new Promise((resolve, reject) => {
-            ffmpeg()
-                .input(videoTempPath)
-                .input(audioTempPath)
+            const command = ffmpeg(videoTempPath);
+
+            for (const downloadedAudio of downloadedAudios) {
+                command.addInput(downloadedAudio);
+            }
+
+            command
+                .outputOptions([
+                    '-map 0:v',
+                    ...downloadedAudios.map((audio, index) => `-map ${index + 1}:a`),
+                ])
                 .videoCodec('copy')
                 .audioCodec('aac')
                 .on('progress', (progress) => {
@@ -207,7 +230,7 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
                 .on('error', (error) => {
                     reject(error);
                 })
-                .save(resultVideoPath);
+                .save(resultVideoPath)
         })
 
         log({
