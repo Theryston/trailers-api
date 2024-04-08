@@ -12,7 +12,7 @@ import { load as loadCheerio } from 'cheerio';
 import axios from 'axios';
 import fixEscapeHex from '../../utils/fix-escape-hex.js';
 
-export default async function netflix({ name, year, outPath, trailerPage, onTrailerFound, lang }) {
+export default async function netflix({ name, year, outPath, trailerPage, onTrailerFound, lang, fullAudioTracks }) {
   log({
     type: 'INFO',
     message: `Netflix | Starting...`,
@@ -120,7 +120,14 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
         );
       }
 
-      const audioUrl = audioTrack.streams[0].urls[0].url;
+      const audiosUrl = [];
+
+      if (fullAudioTracks) {
+        audiosUrl.push(...trailerInfos.result.audio_tracks.map((a) => a.streams[0].urls[0].url))
+      } else {
+        audiosUrl.push(audioTrack.streams[0].urls[0].url)
+      }
+
       const biggestVideo = trailerInfos.result.video_tracks[0].streams.reduce(
         (prev, current) => {
           if (current.bitrate > prev.bitrate) {
@@ -132,7 +139,6 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
       const videoUrl = biggestVideo.urls[0].url;
 
       const videoTempPath = path.join(tempDir, `${Date.now()}-video.mp4`);
-      const audioTempPath = path.join(tempDir, `${Date.now()}-audio.mp4`);
 
       log({
         type: 'INFO',
@@ -142,9 +148,20 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
 
       log({
         type: 'INFO',
-        message: `Netflix | Downloading audio of trailer ${i + 1}`,
+        message: `Netflix | Downloading audios of trailer ${i + 1}`,
       });
-      await downloadFile(audioUrl, audioTempPath);
+
+      const downloadedAudios = [];
+      for (let j = 0; j < audiosUrl.length; j++) {
+        const audioTempPath = path.join(tempDir, `${Date.now()}-audio-${j}.m4a`);
+        await downloadFile(audiosUrl[j], audioTempPath);
+        downloadedAudios.push(audioTempPath);
+
+        log({
+          type: 'INFO',
+          message: `Netflix | Downloaded audio ${j + 1} of trailer ${i + 1}`,
+        })
+      }
 
       log({
         type: 'INFO',
@@ -156,9 +173,17 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
 
       try {
         await new Promise((resolve, reject) => {
-          ffmpeg()
-            .input(videoTempPath)
-            .input(audioTempPath)
+          const command = ffmpeg(videoTempPath);
+
+          for (let j = 0; j < downloadedAudios.length; j++) {
+            command.addInput(downloadedAudios[j]);
+          }
+
+          command
+            .outputOptions([
+              '-map 0:v',
+              ...downloadedAudios.map((audio, index) => `-map ${index + 1}:a`),
+            ])
             .videoCodec('copy')
             .audioCodec('aac')
             .on('progress', (progress) => {
@@ -192,8 +217,11 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
         type: 'INFO',
         message: `Netflix | Deleting temp files of trailer ${i + 1}`,
       });
-      fs.unlinkSync(videoTempPath);
-      fs.unlinkSync(audioTempPath);
+
+      fs.rmSync(videoTempPath, { recursive: true, force: true });
+      for (const downloadedAudio of downloadedAudios) {
+        fs.rmSync(downloadedAudio, { recursive: true, force: true });
+      }
     }
 
     log({
