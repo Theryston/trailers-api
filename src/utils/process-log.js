@@ -36,6 +36,7 @@ export default async function processLog({ id, status, description, callbackUrl,
             trailerPage: trailerPage || oldProcess.trailerPage,
             updatedAt: new Date()
         })
+        .where(eq(processSchema.id, id));
 
     const updatedProcess = await findProcess(id);
 
