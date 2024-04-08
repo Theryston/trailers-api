@@ -95,7 +95,7 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
 
         const playbackUrls = trailerInfo.playbackUrls;
 
-        if (!playbackUrls.audioTracks?.length) {
+        if (!playbackUrls?.audioTracks?.length) {
             log({
                 type: 'ERROR',
                 message: `Prime Video | Trailer not found.`,
