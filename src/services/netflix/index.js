@@ -11,6 +11,7 @@ import compareLang from '../../utils/compre-lang.js';
 import { load as loadCheerio } from 'cheerio';
 import axios from 'axios';
 import fixEscapeHex from '../../utils/fix-escape-hex.js';
+import { all as allLangs } from 'locale-codes';
 
 export default async function netflix({ name, year, outPath, trailerPage, onTrailerFound, lang, fullAudioTracks }) {
   log({
@@ -120,12 +121,11 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
         );
       }
 
-      const audiosUrl = [];
-
+      const audios = [];
       if (fullAudioTracks) {
-        audiosUrl.push(...trailerInfos.result.audio_tracks.map((a) => a.streams[0].urls[0].url))
+        audios.push(...trailerInfos.result.audio_tracks.map((a) => ({ url: a.streams[0].urls[0].url, language: a.language })))
       } else {
-        audiosUrl.push(audioTrack.streams[0].urls[0].url)
+        audios.push({ url: audioTrack.streams[0].urls[0].url, language: audioTrack.language })
       }
 
       const biggestVideo = trailerInfos.result.video_tracks[0].streams.reduce(
@@ -152,10 +152,14 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
       });
 
       const downloadedAudios = [];
-      for (let j = 0; j < audiosUrl.length; j++) {
+      for (let j = 0; j < audios.length; j++) {
+        const audio = audios[j];
         const audioTempPath = path.join(tempDir, `${Date.now()}-audio-${j}.m4a`);
-        await downloadFile(audiosUrl[j], audioTempPath);
-        downloadedAudios.push(audioTempPath);
+        await downloadFile(audio.url, audioTempPath);
+        downloadedAudios.push({
+          path: audioTempPath,
+          language: audio.language
+        });
 
         log({
           type: 'INFO',
@@ -176,14 +180,26 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
           const command = ffmpeg(videoTempPath);
 
           for (let j = 0; j < downloadedAudios.length; j++) {
-            command.addInput(downloadedAudios[j]);
+            command.addInput(downloadedAudios[j].path);
           }
 
+          const outputOptionsArray = [
+            '-map 0:v',
+            ...downloadedAudios.map((audio, index) => `-map ${index + 1}:a`),
+            ...downloadedAudios.map((audio, index) => {
+              const lang = allLangs.find(l => l['iso639-1'] && compareLang(l['iso639-1'], audio.language));
+
+              if (!lang || !lang['iso639-2']) {
+                return '';
+              }
+
+              return `-metadata:s:a:${index} language=${lang['iso639-2']}`;
+            }),
+          ]
+            .filter(option => option);
+
           command
-            .outputOptions([
-              '-map 0:v',
-              ...downloadedAudios.map((audio, index) => `-map ${index + 1}:a`),
-            ])
+            .outputOptions(outputOptionsArray)
             .videoCodec('copy')
             .audioCodec('aac')
             .on('progress', (progress) => {
@@ -200,7 +216,7 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
               reject(error);
             })
             .save(resultVideoPath);
-        })
+        });
 
         downloadedVideos.push({
           title: videoTitle,
@@ -211,6 +227,7 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
           type: 'ERROR',
           message: `Netflix | Something went wrong with trailer ${i + 1}`,
         });
+        console.log(error);
       }
 
       log({
@@ -220,7 +237,7 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
 
       fs.rmSync(videoTempPath, { recursive: true, force: true });
       for (const downloadedAudio of downloadedAudios) {
-        fs.rmSync(downloadedAudio, { recursive: true, force: true });
+        fs.rmSync(downloadedAudio.path, { recursive: true, force: true });
       }
     }
 

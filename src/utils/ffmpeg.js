@@ -6,3 +6,4 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(FfprobePath);
 
 export default ffmpeg;
+export { ffmpegPath, FfprobePath }
