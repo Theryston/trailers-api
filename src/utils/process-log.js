@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { PROCESS_STATUS } from "../constants.js";
 import findProcess from "../db/find-process.js";
 import db from "../db/index.js";
