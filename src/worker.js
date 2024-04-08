@@ -53,6 +53,11 @@ export default async function worker({ name, year, processId, services, callback
     await processLog({ id: processId, status: PROCESS_STATUS.SAVING, description: `Saving videos: ${foundTrailers.map((trailer) => trailer.title).join(', ')}`, callbackUrl });
 
     for (const trailer of foundTrailers) {
+      log({
+        type: 'INFO',
+        message: `| ${processId} | uploading: ${trailer.title}`,
+      })
+
       const url = await tempUpload(trailer.path);
       await db
         .insert(trailersSchema)
@@ -63,6 +68,11 @@ export default async function worker({ name, year, processId, services, callback
           createdAt: new Date(),
           updatedAt: new Date(),
         })
+
+      log({
+        type: 'INFO',
+        message: `| ${processId} | uploaded: ${trailer.title}`,
+      })
     }
 
     await processLog({ id: processId, status: PROCESS_STATUS.DONE, description: 'Process completed', callbackUrl });

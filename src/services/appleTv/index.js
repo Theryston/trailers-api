@@ -1,12 +1,12 @@
-import downloadFromPlaylist from './downloadFromPlaylist.js';
 import path from 'node:path';
 import { log } from '../../utils/log.js';
 import normalizeText from '../../utils/normalizeText.js';
 import google from '../../google.js';
 import axios from 'axios';
 import { load as loadCheerio } from 'cheerio';
+import downloadHls from '../../utils/download-hls.js';
 
-export default async function appleTv({ name, year, outPath, trailerPage, onTrailerFound, lang }) {
+export default async function appleTv({ name, year, outPath, trailerPage, onTrailerFound, lang, fullAudioTracks }) {
 	log({
 		type: 'INFO',
 		message: `Apple TV | Starting...`,
@@ -79,11 +79,10 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 			const trailer = trailers[i];
 
 			const resultVideoPath = path.join(outPath, `trailer-${i + 1}.mp4`);
-			await downloadFromPlaylist({
-				playlist: trailer.hlsUrl,
-				resultVideoPath,
-				lang,
-				videoNumber: i + 1,
+			await downloadHls({
+				url: trailer.hlsUrl,
+				outPath: resultVideoPath,
+				lang: fullAudioTracks ? undefined : lang,
 			});
 
 			downloadedVideos.push({

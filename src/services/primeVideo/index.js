@@ -5,7 +5,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { load as loadCheerio } from 'cheerio';
 import axios from 'axios';
-import downloadFile from '../../utils/downloadFile.js';
+import downloadFile from '../../utils/download-file.js';
 import { GLOBAL_TEMP_FOLDER } from '../../constants.js';
 import ffmpeg from '../../utils/ffmpeg.js';
 import compareLang from '../../utils/compre-lang.js';
@@ -175,7 +175,10 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
             message: `Prime Video | Downloading video of trailer`,
         })
 
-        await downloadFile(videoUrl, videoTempPath);
+        await downloadFile({
+            url: videoUrl,
+            path: videoTempPath
+        });
 
         log({
             type: 'INFO',
@@ -187,7 +190,10 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
             const audioTempPath = path.join(tempDir, `${Date.now()}-audio.mp3`);
             const audioUrl = path.join(baseUrl, audioPath);
 
-            await downloadFile(audioUrl, audioTempPath);
+            await downloadFile({
+                url: audioUrl,
+                path: audioTempPath
+            });
             downloadedAudios.push(audioTempPath);
 
             log({

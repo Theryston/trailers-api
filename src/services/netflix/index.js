@@ -1,4 +1,4 @@
-import downloadFile from '../../utils/downloadFile.js';
+import downloadFile from '../../utils/download-file.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import slug from 'slug';
@@ -144,7 +144,10 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
         type: 'INFO',
         message: `Netflix | Downloading video of trailer ${i + 1}`,
       });
-      await downloadFile(videoUrl, videoTempPath);
+      await downloadFile({
+        url: videoUrl,
+        path: videoTempPath
+      });
 
       log({
         type: 'INFO',
@@ -155,7 +158,10 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
       for (let j = 0; j < audios.length; j++) {
         const audio = audios[j];
         const audioTempPath = path.join(tempDir, `${Date.now()}-audio-${j}.m4a`);
-        await downloadFile(audio.url, audioTempPath);
+        await downloadFile({
+          url: audio.url,
+          path: audioTempPath
+        });
         downloadedAudios.push({
           path: audioTempPath,
           language: audio.language
@@ -179,8 +185,8 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
         await new Promise((resolve, reject) => {
           const command = ffmpeg(videoTempPath);
 
-          for (let j = 0; j < downloadedAudios.length; j++) {
-            command.addInput(downloadedAudios[j].path);
+          for (const downloadedAudio of downloadedAudios) {
+            command.addInput(downloadedAudio.path);
           }
 
           const outputOptionsArray = [
