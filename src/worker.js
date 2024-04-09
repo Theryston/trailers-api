@@ -60,7 +60,7 @@ export default async function worker({ name, year, processId, services, trailerP
     }
 
     const sortedServicesResults = servicesResultsWithTrailers.sort((a, b) => b.serviceResult.length - a.serviceResult.length);
-    const bestServiceResult = getBestServiceResult(sortedServicesResults, lang);
+    const bestServiceResult = getBestServiceResult(sortedServicesResults, lang, processId);
 
     const trailers = bestServiceResult.serviceResult;
 
@@ -146,47 +146,33 @@ async function getVideoLangs(videoPath) {
   })
 }
 
-function getBestServiceResult(servicesResults, lang) {
-  let best = null;
-  for (const serviceResult of servicesResults) {
-    switch (true) {
-      case serviceResult.serviceResult.every((t) => t.subtitles.find((sub) => compareLang(sub.language, lang)) && t.langs.find((l) => compareLang(l, lang))):
-        best = serviceResult;
-        break;
-      case serviceResult.serviceResult.every((t) => t.langs.find((l) => compareLang(l, lang))):
-        best = serviceResult;
-        break;
-      case serviceResult.serviceResult.every((t) => t.subtitles.find((sub) => compareLang(sub.language, lang))):
-        best = serviceResult;
-        break;
-      case serviceResult.serviceResult.find((t) => t.langs.find((l) => compareLang(l, lang))):
-        best = serviceResult;
-        break;
-      case serviceResult.serviceResult.find((t) => t.subtitles.find((sub) => compareLang(sub.language, lang))):
-        best = serviceResult;
-        break;
-      default:
-        break;
-    }
+function getBestServiceResult(servicesResults, lang, processId) {
+  let best = servicesResults.find((serviceResult) => serviceResult.serviceResult.every((t) => t.subtitles.find((sub) => compareLang(sub.language, lang)) && t.langs.find((l) => compareLang(l, lang))));
 
-    if (best) {
-      log({
-        type: 'INFO',
-        message: `Found the best service: ${best.name}`,
-        level: 'normal'
-      })
-      break;
-    }
+  if (!best) {
+    best = servicesResults.find((serviceResult) => serviceResult.serviceResult.every((t) => t.langs.find((l) => compareLang(l, lang))));
+  }
+
+  if (!best) {
+    best = servicesResults.find((serviceResult) => serviceResult.serviceResult.every((t) => t.subtitles.find((sub) => compareLang(sub.language, lang))));
+  }
+
+  if (!best) {
+    best = servicesResults.find((serviceResult) => serviceResult.serviceResult.find((t) => t.langs.find((l) => compareLang(l, lang))));
+  }
+
+  if (!best) {
+    best = servicesResults.find((serviceResult) => serviceResult.serviceResult.find((t) => t.subtitles.find((sub) => compareLang(sub.language, lang))));
   }
 
   if (!best) {
     best = servicesResults[0];
-    log({
-      type: 'INFO',
-      message: `Not best service found so just using the first one: ${best.name}`,
-      level: 'normal'
-    })
   }
+
+  log({
+    type: 'INFO',
+    message: `| ${processId} | best service: ${best.serviceResult.name}`,
+  })
 
   return best;
 }
