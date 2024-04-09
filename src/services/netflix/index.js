@@ -227,6 +227,7 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
         downloadedVideos.push({
           title: videoTitle,
           path: resultVideoPath,
+          subtitles: []
         });
       } catch (error) {
         log({

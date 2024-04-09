@@ -248,6 +248,7 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
             {
                 title: 'Trailer',
                 path: resultVideoPath,
+                subtitles: []
             }
         ]
     } catch (error) {

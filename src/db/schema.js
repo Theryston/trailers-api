@@ -29,3 +29,12 @@ export const trailersSchema = sqliteTable('trailers', {
     createdAt: integer("created_at", { mode: 'timestamp' }).notNull().$default(sql`CURRENT_TIMESTAMP`),
     updatedAt: integer("updated_at", { mode: 'timestamp' }).notNull(),
 })
+
+export const subtitlesSchema = sqliteTable('subtitles', {
+    id: text('id').primaryKey().$defaultFn(() => uuid()).notNull(),
+    language: text('language').notNull(),
+    trailerId: text('trailer_id').notNull().references(() => trailersSchema.id),
+    url: text('url').notNull(),
+    createdAt: integer("created_at", { mode: 'timestamp' }).notNull().$default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: integer("updated_at", { mode: 'timestamp' }).notNull(),
+})

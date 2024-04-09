@@ -31,17 +31,52 @@ export default async function downloadHls({ url, outPath, lang }) {
     const bestPlaylist = playlists.sort((a, b) => b.attributes.RESOLUTION.width - a.attributes.RESOLUTION.width)[0];
     const allAudios = Object.values(masterPlaylistParser.manifest.mediaGroups.AUDIO);
     const audios = Object.values(allAudios[0])
+    const allSubtitles = Object.values(masterPlaylistParser.manifest.mediaGroups.SUBTITLES);
+    const subtitles = Object.values(allSubtitles[0]);
 
-    await handleMasterPlaylist({ playlist: bestPlaylist, outPath, lang, audios });
+    return await handleMasterPlaylist({ playlist: bestPlaylist, outPath, lang, audios, subtitles });
 }
 
-async function handleMasterPlaylist({ playlist, outPath, lang, audios }) {
+async function handleMasterPlaylist({ playlist, outPath, lang, audios, subtitles }) {
     if (!playlist) {
         throw new Error('No playlist found');
     }
 
+    if (!subtitles) {
+        subtitles = []
+    }
+
     if (lang) {
         audios = [audios.filter(audio => compareLang(lang, audio.language))[0]];
+    }
+
+    const downloadedSubtitles = [];
+    for (let i = 0; i < subtitles.length; i++) {
+        const subtitle = subtitles[i];
+
+        if (subtitle.characteristics && subtitle.characteristics.includes('accessibility')) {
+            log({
+                type: 'INFO',
+                message: `Ignoring subtitle because it accessibility: ${subtitle.language}`,
+            })
+            continue;
+        }
+
+        if (subtitle.forced) {
+            log({
+                type: 'INFO',
+                message: `Ignoring subtitle because it forced: ${subtitle.language}`,
+            })
+            continue;
+        }
+
+        const tempSubtitleFolder = fs.mkdtempSync(path.join(GLOBAL_TEMP_FOLDER, 'download-hls-subtitle-'));
+        const subtitlePath = await handlePlaylist({ playlist: subtitle, folderPath: tempSubtitleFolder });
+        await handleSubtitle({ subtitlePath });
+        downloadedSubtitles.push({
+            path: subtitlePath,
+            language: subtitle.language
+        })
     }
 
     const downloadedAudios = [];
@@ -123,6 +158,63 @@ async function handleMasterPlaylist({ playlist, outPath, lang, audios }) {
         type: 'INFO',
         message: `Playlist was downloaded: ${outPath}`,
     })
+
+    return {
+        path: outPath,
+        subtitles: downloadedSubtitles
+    };
+}
+
+async function handleSubtitle({ subtitlePath }) {
+    const subtitle = fs.readFileSync(subtitlePath, 'utf-8');
+    const parts = subtitle.split('WEBVTT');
+
+    const resultParts = {};
+    for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        const lines = part.split('\n');
+        const subtitleParts = splitArrayIntoParts(lines);
+
+        for (const subtitlePart of subtitleParts) {
+            if (isNaN(subtitlePart[0])) {
+                continue;
+            }
+
+            const [id, ...text] = subtitlePart;
+            resultParts[id] = `${text.map(t => t.trim()).join('\n')}\n`;
+        }
+    }
+
+    const result = Object.entries(resultParts)
+        .sort((a, b) => a[0] - b[0])
+        .map(([id, text]) => `${id}\n${text}`);
+
+    const vttHeader = 'WEBVTT\n\n';
+    const vtt = `${vttHeader}${result.join('\n')}`;
+    fs.writeFileSync(subtitlePath, vtt);
+}
+
+function splitArrayIntoParts(array) {
+    const parts = [];
+    let currentPart = [];
+
+    for (let i = 0; i < array.length; i++) {
+        const element = array[i];
+        if (element.trim() === '') {
+            if (currentPart.length > 0) {
+                parts.push(currentPart);
+                currentPart = [];
+            }
+        } else {
+            currentPart.push(element);
+        }
+    }
+
+    if (currentPart.length > 0) {
+        parts.push(currentPart);
+    }
+
+    return parts;
 }
 
 async function handlePlaylist({ playlist, folderPath }) {
@@ -143,8 +235,7 @@ async function handlePlaylist({ playlist, folderPath }) {
     parser.end();
 
     const rawSegments = parser.manifest.segments;
-    const inicialSegment = rawSegments[0].map.uri;
-
+    const inicialSegment = rawSegments[0].map?.uri || rawSegments[0].uri;
     const segments = [
         inicialSegment,
         ...rawSegments.map(segment => segment.uri),

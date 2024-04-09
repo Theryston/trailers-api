@@ -79,7 +79,7 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 			const trailer = trailers[i];
 
 			const resultVideoPath = path.join(outPath, `trailer-${i + 1}.mp4`);
-			await downloadHls({
+			const downloaded = await downloadHls({
 				url: trailer.hlsUrl,
 				outPath: resultVideoPath,
 				lang: fullAudioTracks ? undefined : lang,
@@ -87,7 +87,8 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 
 			downloadedVideos.push({
 				title: trailer.title,
-				path: resultVideoPath,
+				path: downloaded.path,
+				subtitles: downloaded.subtitles,
 			});
 		}
 

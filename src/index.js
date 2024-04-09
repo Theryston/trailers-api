@@ -362,6 +362,23 @@ app.post('/process/by-trailer-page', async (req, res) => {
  *                         type: string
  *                       updatedAt:
  *                         type: string
+ *                       subtitles:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: string
+ *                             language:
+ *                               type: string
+ *                             trailerId:
+ *                               type: string
+ *                             url:
+ *                               type: string
+ *                             createdAt:
+ *                               type: string
+ *                             updatedAt:
+ *                               type: string
  *       404:
  *         description: The process was not found
  *         content:

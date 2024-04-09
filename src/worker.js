@@ -5,7 +5,7 @@ import processLog from "./utils/process-log.js";
 import { log } from "./utils/log.js";
 import { tempUpload } from "./temp-upload.js";
 import db from "./db/index.js";
-import { trailersSchema } from "./db/schema.js";
+import { subtitlesSchema, trailersSchema } from "./db/schema.js";
 
 export default async function worker({ name, year, processId, services, callbackUrl, trailerPage, lang, fullAudioTracks }) {
   try {
@@ -59,7 +59,7 @@ export default async function worker({ name, year, processId, services, callback
       })
 
       const url = await tempUpload(trailer.path);
-      await db
+      const [createdTrailer] = await db
         .insert(trailersSchema)
         .values({
           processId,
@@ -68,10 +68,35 @@ export default async function worker({ name, year, processId, services, callback
           createdAt: new Date(),
           updatedAt: new Date(),
         })
+        .returning();
 
       log({
         type: 'INFO',
         message: `| ${processId} | uploaded: ${trailer.title}`,
+      })
+
+      log({
+        type: 'INFO',
+        message: `| ${processId} | uploading: ${trailer.subtitles.length} subtitles`,
+      })
+
+      for (const subtitle of trailer.subtitles) {
+        const subtitleUrl = await tempUpload(subtitle.path);
+
+        await db
+          .insert(subtitlesSchema)
+          .values({
+            language: subtitle.language,
+            trailerId: createdTrailer.id,
+            url: subtitleUrl,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+      }
+
+      log({
+        type: 'INFO',
+        message: `| ${processId} | uploaded: ${trailer.subtitles.length} subtitles`,
       })
     }
 
