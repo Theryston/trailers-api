@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { load as loadCheerio } from 'cheerio';
 
-export default function ttmlToVtt(originalPath) {
+export default function subtitleXmlToVtt(originalPath) {
     const xmlContent = fs.readFileSync(originalPath, 'utf-8');
     const $ = loadCheerio(xmlContent, { xmlMode: true });
     let list = $('p').toArray();

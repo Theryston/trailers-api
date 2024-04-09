@@ -9,7 +9,7 @@ import downloadFile from '../../utils/download-file.js';
 import { GLOBAL_TEMP_FOLDER } from '../../constants.js';
 import ffmpeg from '../../utils/ffmpeg.js';
 import compareLang from '../../utils/compre-lang.js';
-import ttmlToVtt from '../../utils/ttml-to-vtt.js';
+import subtitleXmlToVtt from '../../utils/subtitle-xml-to-vtt.js';
 
 export default async function primeVideo({ name, year, outPath, trailerPage, onTrailerFound, lang, fullAudioTracks }) {
     log({
@@ -120,15 +120,15 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
 
         const subtitles = [];
         for (const subtitleUrl of subtitleUrls) {
-            const tempPath = path.join(GLOBAL_TEMP_FOLDER, `${Date.now()}.html`);
+            const tempPath = path.join(GLOBAL_TEMP_FOLDER, `${Date.now()}.vtt`);
             await downloadFile({
                 url: subtitleUrl.url,
                 path: tempPath
             });
-            await ttmlToVtt(tempPath);
+            await subtitleXmlToVtt(tempPath);
             const locate = new Intl.Locale(subtitleUrl.languageCode);
             subtitles.push({
-                url: subtitleUrl.url,
+                path: tempPath,
                 language: `${locate.language}${locate.region ? `-${locate.region}` : ''}`,
             })
         }

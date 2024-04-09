@@ -12,7 +12,7 @@ import { load as loadCheerio } from 'cheerio';
 import axios from 'axios';
 import fixEscapeHex from '../../utils/fix-escape-hex.js';
 import { all as allLangs } from 'locale-codes';
-import ttmlToVtt from '../../utils/ttml-to-vtt.js';
+import subtitleXmlToVtt from '../../utils/subtitle-xml-to-vtt.js';
 
 export default async function netflix({ name, year, outPath, trailerPage, onTrailerFound, lang, fullAudioTracks }) {
   log({
@@ -286,7 +286,7 @@ async function handleSubtitles({ rawSubtitles, tempDir }) {
       url: downloadUrl,
       path: downloadPath
     });
-    await ttmlToVtt(downloadPath);
+    await subtitleXmlToVtt(downloadPath);
     const locate = new Intl.Locale(rawSubtitle.language);
 
     subtitles.push({
