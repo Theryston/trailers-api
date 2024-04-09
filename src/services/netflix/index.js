@@ -93,7 +93,7 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
         languages: [langStr],
         params: {
           viewableId: trailer.id,
-          profiles: ['heaac-2-dash', 'playready-h264mpl40-dash'],
+          profiles: ['heaac-2-dash', 'playready-h264mpl40-dash', 'imsc1.1', 'dfxp-ls-sdh', 'simplesdh', 'nflx-cmisc', 'BIF240', 'BIF320'],
         }
       }
 
@@ -110,6 +110,15 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
         });
         return false;
       }
+
+      const rawSubtitles = (trailerInfos.result.timedtexttracks || []).filter(st => st.rawTrackType === 'subtitles' && Object.keys(st.ttDownloadables).length);
+
+      log({
+        type: 'INFO',
+        message: `Netflix | Raw subtitles found: ${rawSubtitles.length}`,
+      })
+
+      const subtitles = await handleSubtitles({ rawSubtitles, tempDir });
 
       let audioTrack = trailerInfos.result.audio_tracks.find(
         (at) => compareLang(at.language, lang) && at.streams && at.streams.length
@@ -227,7 +236,7 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
         downloadedVideos.push({
           title: videoTitle,
           path: resultVideoPath,
-          subtitles: []
+          subtitles
         });
       } catch (error) {
         log({
@@ -264,3 +273,57 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
   }
 }
 
+async function handleSubtitles({ rawSubtitles, tempDir }) {
+  const subtitles = [];
+
+  for (let i = 0; i < rawSubtitles.length; i++) {
+    const rawSubtitle = rawSubtitles[i];
+    const downloadInfos = Object.values(rawSubtitle.ttDownloadables)[0];
+    const downloadUrl = Object.values(downloadInfos.downloadUrls)[0];
+    const downloadPath = path.join(tempDir, `${Date.now()}-subtitle-${i}.vtt`);
+    await downloadFile({
+      url: downloadUrl,
+      path: downloadPath
+    });
+    await convertSubtitles(downloadPath);
+    const locate = new Intl.Locale(rawSubtitle.language);
+
+    subtitles.push({
+      path: downloadPath,
+      language: `${locate.language}${locate.region ? `-${locate.region}` : ''}`,
+    })
+  }
+
+  return subtitles;
+}
+
+async function convertSubtitles(originalPath) {
+  const xmlContent = fs.readFileSync(originalPath, 'utf-8');
+  const $ = loadCheerio(xmlContent, { xmlMode: true });
+
+  let vttContent = 'WEBVTT\n\n';
+
+  $('p').each((index, element) => {
+    const begin = $(element).attr('begin');
+    const end = $(element).attr('end');
+    const text = $(element).text().trim();
+    vttContent += `${formatTime(begin)} --> ${formatTime(end)}\n${text}\n\n`;
+  });
+
+  fs.writeFileSync(originalPath, vttContent);
+}
+
+function formatTime(time) {
+  const milliseconds = parseInt(time) / 10000000;
+  const hours = Math.floor(milliseconds / 3600);
+  const minutes = Math.floor((milliseconds % 3600) / 60);
+  const seconds = Math.floor(milliseconds % 60);
+  const millisecondsRemainder = Math.floor((milliseconds % 1) * 1000);
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}.${pad(millisecondsRemainder, 3)}`;
+}
+
+function pad(number, size = 2) {
+  let padded = number.toString();
+  while (padded.length < size) padded = "0" + padded;
+  return padded;
+}
