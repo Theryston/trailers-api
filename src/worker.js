@@ -171,7 +171,7 @@ function getBestServiceResult(servicesResults, lang, processId) {
 
   log({
     type: 'INFO',
-    message: `| ${processId} | best service: ${best.serviceResult.name}`,
+    message: `| ${processId} | best service: ${best.name}`,
   })
 
   return best;
