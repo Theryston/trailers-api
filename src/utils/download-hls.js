@@ -47,6 +47,15 @@ async function handleMasterPlaylist({ playlist, outPath, lang, audios }) {
     const downloadedAudios = [];
     for (let i = 0; i < audios.length; i++) {
         const audio = audios[i];
+
+        if (audio.characteristics && audio.characteristics.includes('describes-video')) {
+            log({
+                type: 'INFO',
+                message: `Ignoring audio because it describes a video: ${audio.language}`,
+            })
+            continue;
+        }
+
         const tempAudioFolder = fs.mkdtempSync(path.join(GLOBAL_TEMP_FOLDER, 'download-hls-audio-'));
         const audioPath = await handlePlaylist({ playlist: audio, folderPath: tempAudioFolder });
 
