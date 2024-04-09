@@ -9,6 +9,7 @@ import downloadFile from '../../utils/download-file.js';
 import { GLOBAL_TEMP_FOLDER } from '../../constants.js';
 import ffmpeg from '../../utils/ffmpeg.js';
 import compareLang from '../../utils/compre-lang.js';
+import ttmlToVtt from '../../utils/ttml-to-vtt.js';
 
 export default async function primeVideo({ name, year, outPath, trailerPage, onTrailerFound, lang, fullAudioTracks }) {
     log({
@@ -68,7 +69,7 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
                 deviceTypeID: 'AOAGZA014O5RE',
                 firmware: 1,
                 consumptionType: 'Streaming',
-                desiredResources: 'PlaybackUrls',
+                desiredResources: 'PlaybackUrls,SubtitleUrls',
                 resourceUsage: 'ImmediateConsumption',
                 videoMaterialType: 'Trailer',
                 titleId,
@@ -108,6 +109,34 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
         if (!audioTrack) {
             audioTrack = playbackUrls.audioTracks[0];
         }
+
+        const trackGroupId = audioTrack.trackGroupId;
+        const subtitleUrls = trailerInfo.subtitleUrls.filter(sU => sU.trackGroupId === trackGroupId);
+
+        log({
+            type: 'INFO',
+            message: `Prime Video | Subtitles found: ${subtitleUrls.length}`,
+        })
+
+        const subtitles = [];
+        for (const subtitleUrl of subtitleUrls) {
+            const tempPath = path.join(GLOBAL_TEMP_FOLDER, `${Date.now()}.html`);
+            await downloadFile({
+                url: subtitleUrl.url,
+                path: tempPath
+            });
+            await ttmlToVtt(tempPath);
+            const locate = new Intl.Locale(subtitleUrl.languageCode);
+            subtitles.push({
+                url: subtitleUrl.url,
+                language: `${locate.language}${locate.region ? `-${locate.region}` : ''}`,
+            })
+        }
+
+        log({
+            type: 'INFO',
+            message: `Prime Video | Subtitles downloaded`,
+        })
 
         const urlSet = playbackUrls.urlSets[Object.keys(playbackUrls.urlSets).find((key) => {
             const currentUrlSet = playbackUrls.urlSets[key];
@@ -248,7 +277,7 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
             {
                 title: 'Trailer',
                 path: resultVideoPath,
-                subtitles: []
+                subtitles
             }
         ]
     } catch (error) {

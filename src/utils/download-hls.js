@@ -73,9 +73,10 @@ async function handleMasterPlaylist({ playlist, outPath, lang, audios, subtitles
         const tempSubtitleFolder = fs.mkdtempSync(path.join(GLOBAL_TEMP_FOLDER, 'download-hls-subtitle-'));
         const subtitlePath = await handlePlaylist({ playlist: subtitle, folderPath: tempSubtitleFolder });
         await handleSubtitle({ subtitlePath });
+        const locate = new Intl.Locale(subtitle.language);
         downloadedSubtitles.push({
             path: subtitlePath,
-            language: subtitle.language
+            language: `${locate.language}${locate.region ? `-${locate.region}` : ''}`,
         })
     }
 

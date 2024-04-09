@@ -12,6 +12,7 @@ import { load as loadCheerio } from 'cheerio';
 import axios from 'axios';
 import fixEscapeHex from '../../utils/fix-escape-hex.js';
 import { all as allLangs } from 'locale-codes';
+import ttmlToVtt from '../../utils/ttml-to-vtt.js';
 
 export default async function netflix({ name, year, outPath, trailerPage, onTrailerFound, lang, fullAudioTracks }) {
   log({
@@ -285,7 +286,7 @@ async function handleSubtitles({ rawSubtitles, tempDir }) {
       url: downloadUrl,
       path: downloadPath
     });
-    await convertSubtitles(downloadPath);
+    await ttmlToVtt(downloadPath);
     const locate = new Intl.Locale(rawSubtitle.language);
 
     subtitles.push({
@@ -295,35 +296,4 @@ async function handleSubtitles({ rawSubtitles, tempDir }) {
   }
 
   return subtitles;
-}
-
-async function convertSubtitles(originalPath) {
-  const xmlContent = fs.readFileSync(originalPath, 'utf-8');
-  const $ = loadCheerio(xmlContent, { xmlMode: true });
-
-  let vttContent = 'WEBVTT\n\n';
-
-  $('p').each((index, element) => {
-    const begin = $(element).attr('begin');
-    const end = $(element).attr('end');
-    const text = $(element).text().trim();
-    vttContent += `${formatTime(begin)} --> ${formatTime(end)}\n${text}\n\n`;
-  });
-
-  fs.writeFileSync(originalPath, vttContent);
-}
-
-function formatTime(time) {
-  const milliseconds = parseInt(time) / 10000000;
-  const hours = Math.floor(milliseconds / 3600);
-  const minutes = Math.floor((milliseconds % 3600) / 60);
-  const seconds = Math.floor(milliseconds % 60);
-  const millisecondsRemainder = Math.floor((milliseconds % 1) * 1000);
-  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}.${pad(millisecondsRemainder, 3)}`;
-}
-
-function pad(number, size = 2) {
-  let padded = number.toString();
-  while (padded.length < size) padded = "0" + padded;
-  return padded;
 }
