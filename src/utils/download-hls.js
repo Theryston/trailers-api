@@ -32,7 +32,7 @@ export default async function downloadHls({ url, outPath, lang }) {
     const allAudios = Object.values(masterPlaylistParser.manifest.mediaGroups.AUDIO);
     const audios = Object.values(allAudios[0])
     const allSubtitles = Object.values(masterPlaylistParser.manifest.mediaGroups.SUBTITLES);
-    const subtitles = Object.values(allSubtitles[0]);
+    const subtitles = Object.values(allSubtitles[0] || {});
 
     return await handleMasterPlaylist({ playlist: bestPlaylist, outPath, lang, audios, subtitles });
 }

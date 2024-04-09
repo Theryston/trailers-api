@@ -149,7 +149,6 @@ app.post('/process', async (req, res) => {
             year: String(year),
             processId: process.id,
             services,
-            callbackUrl,
             lang,
             fullAudioTracks: fullAudioTracks ? 1 : 0
         });
@@ -286,7 +285,6 @@ app.post('/process/by-trailer-page', async (req, res) => {
         year: null,
         processId: process.id,
         services: [service],
-        callbackUrl,
         trailerPage,
         lang,
         fullAudioTracks: fullAudioTracks ? 1 : 0

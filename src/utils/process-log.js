@@ -30,7 +30,7 @@ export default async function processLog({ id, status, description, callbackUrl,
     await db
         .update(processSchema)
         .set({
-            callbackUrl: callbackUrl || oldProcess.callback_url,
+            callbackUrl: callbackUrl || oldProcess.callbackUrl,
             isCompleted,
             status,
             statusDetails: description || oldProcess.statusDetails,
@@ -41,8 +41,8 @@ export default async function processLog({ id, status, description, callbackUrl,
 
     const updatedProcess = await findProcess(id);
 
-    if (updatedProcess.callback_url && oldProcess.status !== updatedProcess.status) {
-        fetch(updatedProcess.callback_url, {
+    if (updatedProcess.callbackUrl && oldProcess.status !== updatedProcess.status) {
+        fetch(updatedProcess.callbackUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

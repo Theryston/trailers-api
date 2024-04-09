@@ -10,6 +10,7 @@ export const PROCESS_STATUS = {
     PROCESSING: 'processing',
     FINDING_TRAILER_PAGE: 'finding_trailer_page',
     TRYING_TO_DOWNLOAD: 'trying_to_download',
+    FOUND_TRAILER: 'found_trailer',
     NO_TRAILERS: 'no_trailers',
     SAVING: 'saving',
     DONE: 'done',
