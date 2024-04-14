@@ -19,8 +19,9 @@ export default async function worker({ name, year, processId, services, trailerP
     await processLog({ id: processId, status: PROCESS_STATUS.FINDING_TRAILER_PAGE, description: `Looking for trailer on: ${services.map((service) => service.name).join(', ')}` });
 
     const servicesResults = [];
+    const promises = [];
     for (const service of services) {
-      try {
+      promises.push((async () => {
         const index = servicesResults.push({ name: service.name, serviceResult: [], trailerPage: null }) - 1;
         const serviceTrailers = await service.func({
           name,
@@ -42,14 +43,18 @@ export default async function worker({ name, year, processId, services, trailerP
         }
 
         servicesResults[index].serviceResult = serviceTrailers;
-      } catch (error) {
-        log({
-          type: 'ERROR',
-          message: `Failed to find the trailer on ${service.name}: ${error.message}`,
-          level: 'normal'
-        });
-        continue;
-      }
+      })());
+    }
+
+    const promiseResults = await Promise.allSettled(promises);
+    const errors = promiseResults.filter((result) => result.status === 'rejected').map((result) => result.reason);
+
+    for (const error of errors) {
+      log({
+        type: 'ERROR',
+        message: `Failed to find the trailer on some service: ${error.message}`,
+        level: 'normal'
+      });
     }
 
     const servicesResultsWithTrailers = servicesResults.filter((serviceResult) => serviceResult.trailerPage && serviceResult.serviceResult.length && serviceResult.serviceResult.every((t) => t.langs.length));
