@@ -1,5 +1,6 @@
 import axios from 'axios';
 import axiosRetry from 'axios-retry';
+import axiosRetryConfig from './axios-retry-config.js';
 
 const clientWithProxy = axios.create({
     proxy: {
@@ -13,12 +14,6 @@ const clientWithProxy = axios.create({
     },
 });
 
-axiosRetry(clientWithProxy, {
-    retries: 10,
-    retryCondition: () => true,
-    onRetry: (retryCount, error) => {
-        console.log(`Retrying ${retryCount} time(s) after ${error.message}`);
-    },
-});
+axiosRetry(clientWithProxy, axiosRetryConfig);
 
 export default clientWithProxy;
