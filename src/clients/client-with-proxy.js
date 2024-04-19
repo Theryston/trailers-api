@@ -17,7 +17,8 @@ axiosRetry(clientWithProxy, {
     retries: 3,
     onRetry: (retryCount, error) => {
         console.log(`Retrying ${retryCount} time(s) after ${error.message}`);
-    }
+    },
+    retryCondition: () => true
 });
 
 export default clientWithProxy;
