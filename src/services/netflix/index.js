@@ -56,7 +56,6 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
     }
 
     const { data: netflixPage, headers: netflixHeaders } = await clientWithProxy.get(trailerPage);
-    console.log(netflixPage, netflixHeaders);
     const netflixCookies = netflixHeaders['set-cookie'].join('; ');
 
     const $ = loadCheerio(netflixPage);
