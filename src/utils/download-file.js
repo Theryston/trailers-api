@@ -6,7 +6,7 @@ import clientWithProxy from '../clients/client-with-proxy.js';
 
 axiosRetry(axios, axiosRetryConfig)
 
-export default async function downloadFile({ url, path, append = false, useProxy = false, timeout = 30000 }) {
+export default async function downloadFile({ url, path, append = false, useProxy = false, timeout }) {
   const client = useProxy ? clientWithProxy : axios;
 
   const response = await client.get(url, {
