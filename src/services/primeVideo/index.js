@@ -10,6 +10,7 @@ import ffmpeg from '../../utils/ffmpeg.js';
 import compareLang from '../../utils/compre-lang.js';
 import subtitleXmlToVtt from '../../utils/subtitle-xml-to-vtt.js';
 import clientWithProxy from '../../clients/client-with-proxy.js';
+import axios from 'axios';
 
 export default async function primeVideo({ name, year, outPath, trailerPage, onTrailerFound, lang, fullAudioTracks }) {
     log({
@@ -146,7 +147,7 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
         const mpdUrl = urlSet.urls.manifest.url;
         const baseUrl = path.dirname(mpdUrl);
 
-        const { data: mpd } = await clientWithProxy.get(mpdUrl, {
+        const { data: mpd } = await axios.get(mpdUrl, {
             responseType: 'text'
         });
 

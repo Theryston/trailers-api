@@ -4,7 +4,7 @@ import normalizeText from '../../utils/normalizeText.js';
 import google from '../../google.js';
 import { load as loadCheerio } from 'cheerio';
 import downloadHls from '../../utils/download-hls.js';
-import clientWithProxy from '../../clients/client-with-proxy.js';
+import axios from 'axios';
 
 export default async function appleTv({ name, year, outPath, trailerPage, onTrailerFound, lang, fullAudioTracks }) {
 	log({
@@ -59,7 +59,7 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 			onTrailerFound(trailerPage);
 		}
 
-		const { data: appleTvPage } = await clientWithProxy.get(trailerPage);
+		const { data: appleTvPage } = await axios.get(trailerPage);
 		const $ = loadCheerio(appleTvPage);
 		const dataStr = $('script#shoebox-uts-api').text();
 		const allData = JSON.parse(dataStr);
