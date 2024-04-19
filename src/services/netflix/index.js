@@ -284,7 +284,8 @@ async function handleSubtitles({ rawSubtitles, tempDir }) {
     const downloadPath = path.join(tempDir, `${Date.now()}-subtitle-${i}.vtt`);
     await downloadFile({
       url: downloadUrl,
-      path: downloadPath
+      path: downloadPath,
+      useProxy: true
     });
     await subtitleXmlToVtt(downloadPath);
     const locate = new Intl.Locale(rawSubtitle.language);

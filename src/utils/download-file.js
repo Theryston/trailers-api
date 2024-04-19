@@ -2,11 +2,14 @@ import axios from 'axios';
 import axiosRetry from 'axios-retry';
 import fs from 'node:fs';
 import axiosRetryConfig from '../clients/axios-retry-config.js';
+import clientWithProxy from '../clients/client-with-proxy.js';
 
 axiosRetry(axios, axiosRetryConfig)
 
-export default async function downloadFile({ url, path, append = false }) {
-  const response = await axios.get(url, {
+export default async function downloadFile({ url, path, append = false, useProxy = false }) {
+  const client = useProxy ? clientWithProxy : axios;
+
+  const response = await client.get(url, {
     responseType: 'arraybuffer'
   });
 
