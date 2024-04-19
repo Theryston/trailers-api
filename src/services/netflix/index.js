@@ -13,6 +13,7 @@ import fixEscapeHex from '../../utils/fix-escape-hex.js';
 import { all as allLangs } from 'locale-codes';
 import subtitleXmlToVtt from '../../utils/subtitle-xml-to-vtt.js';
 import clientWithProxy from '../../clients/client-with-proxy.js';
+import { v4 as uuid } from 'uuid';
 
 export default async function netflix({ name, year, outPath, trailerPage, onTrailerFound, lang, fullAudioTracks }) {
   log({
@@ -280,13 +281,26 @@ async function handleSubtitles({ rawSubtitles, tempDir }) {
   for (let i = 0; i < rawSubtitles.length; i++) {
     const rawSubtitle = rawSubtitles[i];
     const downloadInfos = Object.values(rawSubtitle.ttDownloadables)[0];
-    const downloadUrl = Object.values(downloadInfos.downloadUrls)[0];
-    const downloadPath = path.join(tempDir, `${Date.now()}-subtitle-${i}.vtt`);
-    await downloadFile({
-      url: downloadUrl,
-      path: downloadPath,
-      useProxy: true
+    const downloadUrls = Object.values(downloadInfos.downloadUrls);
+
+    const promises = downloadUrls.map(downloadUrl => {
+      console.log(`Downloading subtitle ${i + 1} from ${downloadUrl}`);
+      const downloadPath = path.join(tempDir, `${uuid()}.vtt`);
+
+      return downloadFile({
+        url: downloadUrl,
+        path: downloadPath,
+        timeout: 10000,
+      })
     });
+
+    const results = await Promise.allSettled(promises);
+    const downloadPath = results.find(result => result.status === 'fulfilled').value;
+
+    if (!downloadPath || !fs.existsSync(downloadPath)) {
+      continue;
+    }
+
     await subtitleXmlToVtt(downloadPath);
     const locate = new Intl.Locale(rawSubtitle.language);
 
