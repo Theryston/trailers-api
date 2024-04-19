@@ -14,7 +14,7 @@ const clientWithProxy = axios.create({
 });
 
 axiosRetry(clientWithProxy, {
-    retries: 3,
+    retries: 10,
     onRetry: (retryCount, error) => {
         console.log(`Retrying ${retryCount} time(s) after ${error.message}`);
     },
