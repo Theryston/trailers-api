@@ -295,7 +295,7 @@ async function handleSubtitles({ rawSubtitles, tempDir }) {
     });
 
     const results = await Promise.allSettled(promises);
-    const downloadPath = results.find(result => result.status === 'fulfilled').value;
+    const downloadPath = results.find(result => result.status === 'fulfilled')?.value;
 
     if (!downloadPath || !fs.existsSync(downloadPath)) {
       continue;
