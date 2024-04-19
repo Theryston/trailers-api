@@ -10,9 +10,9 @@ min_machines_running = 0
 processes = ['app']
 
 [[vm]]
-memory = '2gb'
+memory = '4gb'
 cpu_kind = 'shared'
-cpus = 1
+cpus = 2
 
 [mounts]
 source = "process"
