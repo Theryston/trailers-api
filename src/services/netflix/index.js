@@ -281,7 +281,7 @@ async function handleSubtitles({ rawSubtitles, tempDir }) {
   for (let i = 0; i < rawSubtitles.length; i++) {
     const rawSubtitle = rawSubtitles[i];
     const downloadInfos = Object.values(rawSubtitle.ttDownloadables)[0];
-    const downloadUrls = Object.values(downloadInfos.downloadUrls);
+    const downloadUrls = Object.values(downloadInfos.downloadUrls).slice(0, 1);
 
     const promises = downloadUrls.map(downloadUrl => {
       console.log(`Downloading subtitle ${i + 1} from ${downloadUrl}`);
