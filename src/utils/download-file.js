@@ -2,9 +2,7 @@ import axios from 'axios';
 import fs from 'node:fs';
 
 export default async function downloadFile({ url, path, append = false }) {
-  const response = await axios({
-    url,
-    method: 'GET',
+  const response = await axios.get(url, {
     responseType: 'stream',
   });
 

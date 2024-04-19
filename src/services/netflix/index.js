@@ -9,10 +9,10 @@ import normalizeText from '../../utils/normalizeText.js';
 import google from '../../google.js';
 import compareLang from '../../utils/compre-lang.js';
 import { load as loadCheerio } from 'cheerio';
-import axios from 'axios';
 import fixEscapeHex from '../../utils/fix-escape-hex.js';
 import { all as allLangs } from 'locale-codes';
 import subtitleXmlToVtt from '../../utils/subtitle-xml-to-vtt.js';
+import clientWithProxy from '../../clients/client-with-proxy.js';
 
 export default async function netflix({ name, year, outPath, trailerPage, onTrailerFound, lang, fullAudioTracks }) {
   log({
@@ -55,7 +55,8 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
       onTrailerFound(trailerPage);
     }
 
-    const { data: netflixPage, headers: netflixHeaders } = await axios.get(trailerPage);
+    const { data: netflixPage, headers: netflixHeaders } = await clientWithProxy.get(trailerPage);
+    console.log(netflixPage, netflixHeaders);
     const netflixCookies = netflixHeaders['set-cookie'].join('; ');
 
     const $ = loadCheerio(netflixPage);
@@ -98,7 +99,7 @@ export default async function netflix({ name, year, outPath, trailerPage, onTrai
         }
       }
 
-      const { data: trailerInfos } = await axios.post(`https://www.netflix.com/playapi/cadmium/manifest/1`, trailerRequestData, {
+      const { data: trailerInfos } = await clientWithProxy.post(`https://www.netflix.com/playapi/cadmium/manifest/1`, trailerRequestData, {
         headers: {
           Cookie: netflixCookies,
         }
