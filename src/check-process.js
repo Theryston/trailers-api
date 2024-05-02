@@ -4,8 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import db from "./db/index.js";
 import { processSchema } from "./db/schema.js";
 import { GLOBAL_TEMP_FOLDER } from "./constants.js";
-import fs from "node:fs";
-import path from "node:path";
+import cleanFolder from "./utils/clean-folder.js";
 
 cron.schedule("*/5 * * * *", async () => {
     try {
@@ -20,12 +19,17 @@ cron.schedule("*/5 * * * *", async () => {
 
         log({
             type: 'INFO',
-            message: 'All processes are completed! Exiting...',
+            message: 'All processes are completed! Cleaning temp folder...',
             level: 'important'
         })
 
-        cleanTempFolder()
-        process.exit(0)
+        await cleanFolder(GLOBAL_TEMP_FOLDER);
+
+        log({
+            type: 'INFO',
+            message: 'Temp folder cleaned!',
+            level: 'important'
+        })
     } catch (error) {
         log({
             type: 'ERROR',
@@ -34,24 +38,3 @@ cron.schedule("*/5 * * * *", async () => {
         });
     }
 })
-
-function cleanTempFolder() {
-    try {
-        const folders = fs.readdirSync(GLOBAL_TEMP_FOLDER);
-        for (const folder of folders) {
-            log({
-                type: 'INFO',
-                message: `Cleaning temp folder: ${folder}`,
-                level: 'normal'
-            })
-
-            fs.rmSync(path.join(GLOBAL_TEMP_FOLDER, folder), { recursive: true, force: true });
-        }
-    } catch (error) {
-        log({
-            type: 'ERROR',
-            message: `Failed to clean temp folder: ${error.message}`,
-            level: 'normal'
-        });
-    }
-}

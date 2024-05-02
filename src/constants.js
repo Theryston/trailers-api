@@ -4,6 +4,7 @@ import fs from "node:fs";
 export const PROCESS_FOLDER = path.join(process.cwd(), "process");
 export const DATA_FOLDER = path.join(PROCESS_FOLDER, "data");
 export const GLOBAL_TEMP_FOLDER = path.join(PROCESS_FOLDER, "temp");
+export const FILES_FOLDER = path.join(DATA_FOLDER, "files");
 export const CONCURRENCY = 5;
 export const PROCESS_STATUS = {
     PENDING: 'pending',
@@ -28,4 +29,8 @@ if (!fs.existsSync(DATA_FOLDER)) {
 
 if (!fs.existsSync(GLOBAL_TEMP_FOLDER)) {
     fs.mkdirSync(GLOBAL_TEMP_FOLDER);
+}
+
+if (!fs.existsSync(FILES_FOLDER)) {
+    fs.mkdirSync(FILES_FOLDER);
 }

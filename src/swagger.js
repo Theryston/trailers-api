@@ -8,7 +8,7 @@ const options = {
             version: '1.0.0',
             description: 'A API that downloads movie and tv shows trailers in high resolution from services like Netflix, Apple TV, Prime Video and more',
         },
-        servers: [{ url: 'https://trailers-api.fly.dev' }, { url: 'http://localhost:3000' }],
+        servers: [{ url: process.env.BASE_URL }],
     },
     apis: ['./**/*.js'],
 };

@@ -1,11 +1,12 @@
 import 'dotenv/config.js';
 import './check-process.js';
+import './delete-files.js';
 import express from "express";
 import { promise as fastq } from 'fastq';
 import cors from 'cors';
 import getServices from './services/index.js';
 import worker from './worker.js';
-import { CONCURRENCY, PROCESS_STATUS } from './constants.js';
+import { CONCURRENCY, FILES_FOLDER, PROCESS_STATUS } from './constants.js';
 import { log } from './utils/log.js';
 import findProcess from './db/find-process.js';
 import swaggerUi from 'swagger-ui-express';
@@ -18,6 +19,7 @@ const app = express();
 app.use(express.json());
 app.use(cors('*'));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs));
+app.use('/files', express.static(FILES_FOLDER));
 
 const queue = fastq(worker, CONCURRENCY);
 

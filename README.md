@@ -12,4 +12,4 @@ key or login credentials!
 
 ## Docs
 
-- [x] [Swagger UI](https://trailers-api.fly.dev/docs)
+- [x] [Swagger UI](https://trailers.theryston.dev/docs)

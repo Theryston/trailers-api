@@ -9,7 +9,6 @@ import { GLOBAL_TEMP_FOLDER } from '../../constants.js';
 import ffmpeg from '../../utils/ffmpeg.js';
 import compareLang from '../../utils/compre-lang.js';
 import subtitleXmlToVtt from '../../utils/subtitle-xml-to-vtt.js';
-import clientWithProxy from '../../clients/client-with-proxy.js';
 import axios from 'axios';
 
 export default async function primeVideo({ name, year, outPath, trailerPage, onTrailerFound, lang, fullAudioTracks }) {
@@ -51,7 +50,7 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
             onTrailerFound(trailerPage);
         }
 
-        const { data: primeVideoPage } = await clientWithProxy.get(trailerPage);
+        const { data: primeVideoPage } = await axios.get(trailerPage);
         const $PrimePage = loadCheerio(primeVideoPage);
         const dataStr = $PrimePage('script[type="text/template"]').toArray().find(script => script.children[0]?.data.includes('props')).children[0]?.data;
         const data = JSON.parse(dataStr);
@@ -65,7 +64,7 @@ export default async function primeVideo({ name, year, outPath, trailerPage, onT
             return false;
         }
 
-        const { data: trailerInfo } = await clientWithProxy.get(`https://atv-ps.primevideo.com/cdp/catalog/GetPlaybackResources`, {
+        const { data: trailerInfo } = await axios.get(`https://atv-ps.primevideo.com/cdp/catalog/GetPlaybackResources`, {
             params: {
                 deviceTypeID: 'AOAGZA014O5RE',
                 firmware: 1,
