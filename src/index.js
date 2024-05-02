@@ -456,8 +456,8 @@ app.get('/all-status', async (req, res) => {
     return res.json(Object.values(PROCESS_STATUS));
 })
 
-app.get('/', async (req, res) => {
-    res.send('Welcome to Trailers API');
+app.get('/', (req, res) => {
+    res.redirect('/docs');
 })
 
 const PORT = Number(process.env.PORT || '3000');
