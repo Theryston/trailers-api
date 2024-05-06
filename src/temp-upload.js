@@ -14,7 +14,7 @@ export async function tempUpload(filePath) {
     }
 
     const newPath = path.join(newPathFolder, fileName);
-    fs.renameSync(filePath, newPath);
+    fs.cpSync(filePath, newPath, { recursive: true });
 
     const key = path.join(id, fileName);
     const url = `${process.env.BASE_URL}/files/${key}`;
