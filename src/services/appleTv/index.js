@@ -5,6 +5,7 @@ import google from '../../google.js';
 import { load as loadCheerio } from 'cheerio';
 import downloadHls from '../../utils/download-hls.js';
 import axios from 'axios';
+import fs from 'node:fs';
 
 export default async function appleTv({ name, year, outPath, trailerPage, onTrailerFound, lang, fullAudioTracks }) {
 	log({
@@ -59,11 +60,35 @@ export default async function appleTv({ name, year, outPath, trailerPage, onTrai
 			onTrailerFound(trailerPage);
 		}
 
+		const type = trailerPage.includes('/show') ? 'show' : 'movie';
+		const url = new URL(trailerPage);
+		const unique = url.pathname.split('/').filter(p => p).pop();
+
 		const { data: appleTvPage } = await axios.get(trailerPage);
 		const $ = loadCheerio(appleTvPage);
-		const dataStr = $('script#shoebox-uts-api').text();
+		const dataStr = $('script#shoebox-uts-api-cache').text();
 		const allData = JSON.parse(dataStr);
-		const data = Object.values(allData)[0];
+		const keys = Object.keys(allData);
+		const key = keys.find(k => k.endsWith(`/${unique}`));
+
+		if (!key) {
+			log({
+				type: 'ERROR',
+				message: `Apple TV | Trailer not found.`,
+			});
+			return false;
+		}
+
+		const data = allData[key];
+
+		if (!data) {
+			log({
+				type: 'ERROR',
+				message: `Apple TV | Trailer not found.`,
+			});
+			return false;
+		}
+
 		const trailers = data.canvas.shelves.find((s) => s.id === 'uts.col.Trailers')?.items?.map(t => ({ title: t.title, hlsUrl: t.playables[0].assets.hlsUrl }));
 
 		if (!trailers) {
