@@ -1,6 +1,8 @@
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import clsx from "clsx";
+import { Link } from "@nextui-org/link";
+import { Divider } from "@nextui-org/divider";
 
 import { Providers } from "./providers";
 
@@ -44,6 +46,24 @@ export default function RootLayout({
             <main className="container mx-auto max-w-7xl pt-16 px-6 flex-grow">
               {children}
             </main>
+            <Divider className="mt-8" />
+            <div className="flex justify-center items-center gap-24 py-4">
+              <Link
+                isExternal
+                className="text-sm"
+                href={`${process.env.NEXT_PUBLIC_BASE_API_URL}/docs`}
+              >
+                API
+              </Link>
+              <Divider orientation="vertical" />
+              <Link
+                isExternal
+                className="text-sm"
+                href="https://github.com/Theryston/trailers-api"
+              >
+                GitHub
+              </Link>
+            </div>
           </div>
         </Providers>
       </body>

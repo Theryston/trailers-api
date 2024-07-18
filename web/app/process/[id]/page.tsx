@@ -252,11 +252,22 @@ export function Trailer({
           <p className="w-full truncate text-white">
             <b>Title:</b> {trailer.title}
           </p>
-          {processTitle ? (
+          {process?.name ? (
             <p className="w-full truncate text-white">
-              <b>Process Name:</b> {processTitle}
+              <b>Process Name:</b> {process.name}
             </p>
-          ) : ()}
+          ) : (
+            <>
+              {process?.trailerPage && (
+                <p className="w-full truncate text-white">
+                  <b>Page URL:</b>{" "}
+                  <Link isExternal href={process.trailerPage}>
+                    {process.trailerPage}
+                  </Link>
+                </p>
+              )}
+            </>
+          )}
         </div>
         <div className="flex justify-between gap-2 w-full">
           <Button
