@@ -11,8 +11,9 @@ import findProcess from './db/find-process.js';
 import swaggerUi from 'swagger-ui-express';
 import specs from './swagger.js';
 import db from './db/index.js';
-import { processSchema } from './db/schema.js';
+import { processSchema, subtitlesSchema, trailersSchema } from './db/schema.js';
 import continueProcess from './continue-process.js';
+import { desc, eq, gt } from 'drizzle-orm';
 
 const app = express();
 app.use(express.json());
@@ -401,6 +402,76 @@ app.get('/process/:processId', async (req, res) => {
 
     res.json(process);
 })
+
+/**
+ * @swagger
+ * /trailers/last:
+ *   get:
+ *     summary: Get the last 15 trailers
+ *     tags: [Trailers]
+ *     responses:
+ *       200:
+ *         description: The list of trailers
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   url:
+ *                     type: string
+ *                   thumbnailUrl:
+ *                     type: string
+ *                   title:
+ *                     type: string
+ *                   processId:
+ *                     type: string
+ *                   createdAt:
+ *                     type: string
+ *                   updatedAt:
+ *                     type: string
+ *                   subtitles:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         language:
+ *                           type: string
+ *                         trailerId:
+ *                           type: string
+ *                         url:
+ *                           type: string
+ *                         createdAt:
+ *                           type: string
+ *                         updatedAt:
+ *                           type: string
+ */
+app.get('/trailers/last', async (req, res) => {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const trailers = await db
+        .select()
+        .from(trailersSchema)
+        .where(gt(trailersSchema.createdAt, sevenDaysAgo))
+        .orderBy(desc(trailersSchema.createdAt))
+        .limit(15);
+
+    for (const trailer of trailers) {
+        trailer.subtitles = await db
+            .select()
+            .from(subtitlesSchema)
+            .where(eq(subtitlesSchema.trailerId, trailer.id));
+    }
+
+    res.json(trailers);
+});
+
 
 /**
  * @swagger
