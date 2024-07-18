@@ -405,9 +405,9 @@ app.get('/process/:processId', async (req, res) => {
 
 /**
  * @swagger
- * /trailers/last:
+ * /trailers/feed:
  *   get:
- *     summary: Get the last 15 trailers
+ *     summary: Get some trailers from the database
  *     tags: [Trailers]
  *     responses:
  *       200:
@@ -451,22 +451,29 @@ app.get('/process/:processId', async (req, res) => {
  *                         updatedAt:
  *                           type: string
  */
-app.get('/trailers/last', async (req, res) => {
+app.get('/trailers/feed', async (req, res) => {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const trailers = await db
+    const uniqueTrailers = await db
         .select()
         .from(trailersSchema)
         .where(gt(trailersSchema.createdAt, sevenDaysAgo))
         .orderBy(desc(trailersSchema.createdAt))
+        .groupBy(trailersSchema.processId)
         .limit(15);
 
-    for (const trailer of trailers) {
-        trailer.subtitles = await db
+    const trailers = [];
+    for (const trailer of uniqueTrailers) {
+        const subtitles = await db
             .select()
             .from(subtitlesSchema)
             .where(eq(subtitlesSchema.trailerId, trailer.id));
+
+        trailers.push({
+            ...trailer,
+            subtitles
+        });
     }
 
     res.json(trailers);

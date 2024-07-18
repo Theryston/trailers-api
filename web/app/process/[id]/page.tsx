@@ -165,7 +165,7 @@ function Process({ process }: { process: any }) {
   );
 }
 
-function Trailer({ trailer }: { trailer: any }) {
+export function Trailer({ trailer }: { trailer: any }) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadingProgress, setDownloadingProgress] = useState(0);
   const {
