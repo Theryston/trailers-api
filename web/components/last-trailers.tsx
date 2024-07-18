@@ -2,8 +2,9 @@
 
 import useSWR from "swr";
 
+import Trailer from "./trailer";
+
 import { fetcher } from "@/lib/api";
-import { Trailer } from "@/app/process/[id]/page";
 
 export default function LastTrailers() {
   const { data: trailers } = useSWR("/trailers/feed", fetcher);
