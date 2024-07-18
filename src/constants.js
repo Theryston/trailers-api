@@ -4,7 +4,7 @@ import os from "node:os";
 
 export const DATA_FOLDER = process.env.DATA_FOLDER;
 export const GLOBAL_TEMP_FOLDER = fs.mkdtempSync(path.join(os.tmpdir(), "temp-upload-"));
-export const CONCURRENCY = 5;
+export const CONCURRENCY = 1;
 export const PROCESS_STATUS = {
     PENDING: 'pending',
     PROCESSING: 'processing',
