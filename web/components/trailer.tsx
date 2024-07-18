@@ -129,17 +129,11 @@ export default function Trailer({
             {isDownloading ? `${downloadingProgress}%` : "Download"}
           </Button>
           <Link isExternal className="w-full" href={trailer.url}>
-            <Button fullWidth color="primary" size="sm" variant="ghost">
+            <Button fullWidth color="primary" size="sm">
               Open
             </Button>
           </Link>
-          <Button
-            fullWidth
-            color="primary"
-            size="sm"
-            variant="ghost"
-            onClick={onOpenSubtitles}
-          >
+          <Button fullWidth color="primary" size="sm" onClick={onOpenSubtitles}>
             Subtitles
           </Button>
         </div>
