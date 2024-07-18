@@ -41,6 +41,7 @@ function PageUrl() {
   const [pageUrl, setPageUrl] = useState("");
   const [langValue, setLangValue] = useState("en-US");
   const [fullAudioTracksValue, setFullAudioTracksValue] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const onSubmit = useCallback(async () => {
     if (!pageUrl) {
@@ -67,6 +68,8 @@ function PageUrl() {
     }
 
     try {
+      setIsLoading(true);
+
       const {
         data: { processId },
       } = await client.post("/process/by-trailer-page", {
@@ -80,8 +83,10 @@ function PageUrl() {
       if (error.response?.data?.message) {
         toast.error(error.response.data.message);
       } else {
-        toast.error("Failed to download trailer");
+        toast.error("Failed to download trailers");
       }
+    } finally {
+      setIsLoading(false);
     }
   }, [pageUrl, langValue, fullAudioTracksValue]);
 
@@ -105,8 +110,13 @@ function PageUrl() {
         onFullAudioTracksChange={setFullAudioTracksValue}
         onLangChange={setLangValue}
       />
-      <Button fullWidth color="primary" onClick={onSubmit}>
-        Download Trailer
+      <Button
+        fullWidth
+        color="primary"
+        isLoading={isLoading}
+        onClick={onSubmit}
+      >
+        Download Trailers
       </Button>
     </div>
   );
@@ -128,6 +138,7 @@ function Search() {
   const [fullAudioTracksValue, setFullAudioTracksValue] = useState(true);
   const [yearValue, setYearValue] = useState("");
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   const servicesOptions = [
     { value: "ALL", label: "All Services" },
@@ -170,6 +181,8 @@ function Search() {
     }
 
     try {
+      setIsLoading(true);
+
       const {
         data: { processId },
       } = await client.post("/process", {
@@ -185,8 +198,10 @@ function Search() {
       if (error.response?.data?.message) {
         toast.error(error.response.data.message);
       } else {
-        toast.error("Failed to download trailer");
+        toast.error("Failed to download trailers");
       }
+    } finally {
+      setIsLoading(false);
     }
   }, [service, name, yearValue, langValue, fullAudioTracksValue]);
 
@@ -250,8 +265,13 @@ function Search() {
         onLangChange={setLangValue}
       />
 
-      <Button fullWidth color="primary" onClick={onSubmit}>
-        Download Trailer
+      <Button
+        fullWidth
+        color="primary"
+        isLoading={isLoading}
+        onClick={onSubmit}
+      >
+        Download Trailers
       </Button>
     </div>
   );
