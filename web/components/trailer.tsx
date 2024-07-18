@@ -16,6 +16,12 @@ import { toast } from "sonner";
 import { Link } from "@nextui-org/link";
 import { Button } from "@nextui-org/button";
 
+function truncateText(text: string, maxLength: number) {
+  if (text.length <= maxLength) return text;
+
+  return text.substr(0, maxLength - 3) + "...";
+}
+
 export default function Trailer({
   trailer,
   process,
@@ -96,16 +102,16 @@ export default function Trailer({
             <b>Title:</b> {trailer.title}
           </p>
           {process?.name ? (
-            <p className="w-full truncate text-white">
-              <b>Process Name:</b> {process.name}
+            <p className="w-full text-white">
+              <b>Process Name:</b> {truncateText(process.name, 28)}
             </p>
           ) : (
             <>
               {process?.trailerPage && (
-                <p className="w-full truncate text-white">
+                <p className="w-full text-white">
                   <b>Page URL:</b>{" "}
                   <Link isExternal href={process.trailerPage}>
-                    {process.trailerPage}
+                    {truncateText(process.trailerPage, 28)}
                   </Link>
                 </p>
               )}
