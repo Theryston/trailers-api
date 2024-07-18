@@ -48,10 +48,10 @@ export default function RootLayout({
               {children}
             </main>
             <Divider className="mt-8" />
-            <div className="flex justify-center items-center gap-24 py-4">
+            <div className="flex justify-around md:justify-center items-center gap-0 md:gap-24 py-4">
               <Link
                 isExternal
-                className="text-sm"
+                className="text-xs"
                 href={`${process.env.NEXT_PUBLIC_BASE_API_URL}/docs`}
               >
                 API
@@ -59,13 +59,13 @@ export default function RootLayout({
               <Divider orientation="vertical" />
               <Link
                 isExternal
-                className="text-sm"
+                className="text-xs"
                 href="https://github.com/Theryston/trailers-api"
               >
                 GitHub
               </Link>
               <Divider orientation="vertical" />
-              <Link className="text-sm" href="/terms">
+              <Link className="text-xs" href="/terms">
                 Terms of Use &amp; Privacy Policy
               </Link>
             </div>
