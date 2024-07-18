@@ -24,6 +24,7 @@ export const processSchema = sqliteTable('process', {
 export const trailersSchema = sqliteTable('trailers', {
     id: text('id').primaryKey().$defaultFn(() => uuid()).notNull(),
     url: text('url').notNull(),
+    thumbnailUrl: text('thumbnail_url').notNull(),
     title: text('title'),
     processId: text('process_id').notNull().references(() => processSchema.id),
     createdAt: integer("created_at", { mode: 'timestamp' }).notNull().$default(sql`CURRENT_TIMESTAMP`),

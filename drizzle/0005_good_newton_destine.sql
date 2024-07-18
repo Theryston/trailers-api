@@ -1,0 +1,1 @@
+ALTER TABLE trailers ADD `thumbnail_url` text NOT NULL;

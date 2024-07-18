@@ -352,6 +352,8 @@ app.post('/process/by-trailer-page', async (req, res) => {
  *                         type: string
  *                       url:
  *                         type: string
+ *                       thumbnailUrl:
+ *                         type: string
  *                       title:
  *                         type: string
  *                       processId:

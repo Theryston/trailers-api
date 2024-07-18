@@ -8,6 +8,7 @@ import db from "./db/index.js";
 import { subtitlesSchema, trailersSchema } from "./db/schema.js";
 import ffmpeg from "./utils/ffmpeg.js";
 import compareLang from "./utils/compre-lang.js";
+import extractThumbnail from './extract-thumbnail.js';
 
 export default async function worker({ name, year, processId, services, trailerPage, lang, fullAudioTracks }) {
   try {
@@ -84,12 +85,29 @@ export default async function worker({ name, year, processId, services, trailerP
         message: `| ${processId} | uploading: ${trailer.title}`,
       })
 
+      log({
+        type: 'INFO',
+        message: `| ${processId} | extracting thumbnail`,
+      })
+      const thumbnailUrl = await extractThumbnail(trailer.path);
+
+      log({
+        type: 'INFO',
+        message: `| ${processId} | thumbnail: ${thumbnailUrl}`,
+      })
+
+      log({
+        type: 'INFO',
+        message: `| ${processId} | uploading: ${trailer.title}`,
+      })
+
       const url = await tempUpload(trailer.path);
       const [createdTrailer] = await db
         .insert(trailersSchema)
         .values({
           processId,
           url,
+          thumbnailUrl,
           title: trailer.title,
           createdAt: new Date(),
           updatedAt: new Date(),
