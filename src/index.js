@@ -506,6 +506,10 @@ app.get('/trailers/feed', async (req, res) => {
             .from(processSchema)
             .where(eq(processSchema.id, trailer.processId));
 
+        if (!process || !process.isCompleted) continue;
+        const alreadyExistsPage = trailers.find(t => t.process.trailerPage === process.trailerPage);
+        if (alreadyExistsPage) continue;
+
         trailers.push({
             ...trailer,
             process,
