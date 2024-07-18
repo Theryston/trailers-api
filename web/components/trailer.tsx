@@ -171,7 +171,7 @@ function ModalSubtitles({
         <ModalHeader className="flex flex-col gap-1">
           <h2 className="font-bold text-2xl">Subtitles</h2>
         </ModalHeader>
-        <ModalBody>
+        <ModalBody className="max-h-[80vh] overflow-y-auto">
           {!subtitles || !subtitles.length ? (
             <p className="text-gray-500">No subtitles found</p>
           ) : (
