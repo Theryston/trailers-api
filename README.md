@@ -13,5 +13,5 @@ key or login credentials!
 
 ## Links
 
-- [X] [Web Application](https://trailers.theryston.dev)
-- [x] [Swagger UI](https://api-trailers.theryston.dev/docs)
+- [X] [Web Application](https://trailersdownload.download)
+- [x] [Swagger UI](https://api.trailersdownload.download/docs)
