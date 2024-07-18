@@ -64,6 +64,10 @@ export default function RootLayout({
               >
                 GitHub
               </Link>
+              <Divider orientation="vertical" />
+              <Link className="text-sm" href="/terms">
+                Terms of Use &amp; Privacy Policy
+              </Link>
             </div>
           </div>
         </Providers>
