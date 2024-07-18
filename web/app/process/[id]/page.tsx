@@ -17,6 +17,7 @@ import {
   ModalBody,
   useDisclosure,
 } from "@nextui-org/modal";
+import { ArrowTopRightIcon } from "@radix-ui/react-icons";
 
 import { fetcher } from "@/lib/api";
 import { LANGUAGES } from "@/lib/languages";
@@ -159,13 +160,21 @@ function Process({ process }: { process: any }) {
           </div>
         </>
       ) : (
-        <CircularProgress label="Processing trailers..." />
+        <CircularProgress className="mt-5" label="Processing trailers..." />
       )}
     </div>
   );
 }
 
-export function Trailer({ trailer }: { trailer: any }) {
+export function Trailer({
+  trailer,
+  processTitle,
+  showProcess = false,
+}: {
+  trailer: any;
+  processTitle?: string;
+  showProcess?: boolean;
+}) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadingProgress, setDownloadingProgress] = useState(0);
   const {
@@ -208,7 +217,23 @@ export function Trailer({ trailer }: { trailer: any }) {
   }, [isDownloading, trailer.url]);
 
   return (
-    <Card isFooterBlurred className="border-none" radius="lg">
+    <Card isFooterBlurred className="border-none relative" radius="lg">
+      {showProcess && (
+        <Link
+          isExternal
+          className="absolute right-1 top-1 z-50"
+          href={`/process/${trailer.processId}`}
+        >
+          <Button
+            isIconOnly
+            className="flex justify-center items-center"
+            color="success"
+            size="sm"
+          >
+            <ArrowTopRightIcon />
+          </Button>
+        </Link>
+      )}
       <Image
         className="object-cover max-w-full"
         height={300}
@@ -216,9 +241,16 @@ export function Trailer({ trailer }: { trailer: any }) {
         width={500}
       />
       <CardFooter className="justify-between gap-2 flex-col before:bg-white/10 border-white/20 border-1 overflow-hidden py-1 absolute before:rounded-xl rounded-large bottom-1 w-[calc(100%_-_8px)] shadow-small ml-1 z-10">
-        <p className="w-full truncate text-white">
-          <b>Title:</b> {trailer.title}
-        </p>
+        <div className="flex flex-col gap-2 w-full">
+          <p className="w-full truncate text-white">
+            <b>Title:</b> {trailer.title}
+          </p>
+          {processTitle && (
+            <p className="w-full truncate text-white">
+              <b>Process:</b> {processTitle}
+            </p>
+          )}
+        </div>
         <div className="flex justify-between gap-2 w-full">
           <Button
             fullWidth
