@@ -438,7 +438,31 @@ app.get('/process/:processId', async (req, res) => {
  *                     properties:
  *                       id:
  *                         type: string
+ *                       status:
+ *                         type: string
+ *                       statusDetails:
+ *                         type: string
+ *                       isCompleted:
+ *                         type: number
+ *                       serviceName:
+ *                         type: string
+ *                       services:
+ *                         type: string
  *                       name:
+ *                         type: string
+ *                       lang:
+ *                         type: string
+ *                       year:
+ *                         type: number
+ *                       trailerPage:
+ *                         type: string
+ *                       callbackUrl:
+ *                         type: string
+ *                       callbackError:
+ *                         type: string
+ *                       createdAt:
+ *                         type: string
+ *                       updatedAt:
  *                         type: string
  *                   subtitles:
  *                     type: array
@@ -478,10 +502,7 @@ app.get('/trailers/feed', async (req, res) => {
             .where(eq(subtitlesSchema.trailerId, trailer.id));
 
         const [process] = await db
-            .select({
-                id: processSchema.id,
-                name: processSchema.name
-            })
+            .select()
             .from(processSchema)
             .where(eq(processSchema.id, trailer.processId));
 

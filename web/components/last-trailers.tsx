@@ -23,7 +23,12 @@ export default function LastTrailers() {
             </div>
             <div className="flex flex-col gap-4">
               {trailers.map((t: any) => (
-                <Trailer key={t.id} showProcess trailer={t} />
+                <Trailer
+                  key={t.id}
+                  showProcess
+                  process={t.process}
+                  trailer={t}
+                />
               ))}
             </div>
           </div>

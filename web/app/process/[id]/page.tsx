@@ -73,6 +73,13 @@ function Process({ process }: { process: any }) {
   return (
     <div className="w-full h-full flex items-center flex-col gap-5">
       <div className="w-full flex flex-col gap-4 max-w-xl">
+        {process.name && (
+          <div className="flex justify-between w-full">
+            <p className="font-bold">Name:</p>
+            <p className="text-gray-500">{process.name}</p>
+          </div>
+        )}
+
         <div className="flex justify-between w-full flex-wrap">
           <p className="font-bold">Page URL:</p>
           {process.trailerPage ? (
@@ -168,11 +175,11 @@ function Process({ process }: { process: any }) {
 
 export function Trailer({
   trailer,
-  processTitle,
+  process,
   showProcess = false,
 }: {
   trailer: any;
-  processTitle?: string;
+  process?: any;
   showProcess?: boolean;
 }) {
   const [isDownloading, setIsDownloading] = useState(false);
@@ -245,11 +252,11 @@ export function Trailer({
           <p className="w-full truncate text-white">
             <b>Title:</b> {trailer.title}
           </p>
-          {processTitle && (
+          {processTitle ? (
             <p className="w-full truncate text-white">
-              <b>Process:</b> {processTitle}
+              <b>Process Name:</b> {processTitle}
             </p>
-          )}
+          ) : ()}
         </div>
         <div className="flex justify-between gap-2 w-full">
           <Button
