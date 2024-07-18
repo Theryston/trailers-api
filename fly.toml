@@ -14,7 +14,7 @@ processes = ['app']
 
 [mounts]
 source = 'process_data'
-destination = '/app/process/data'
+destination = '/data'
 
 [[vm]]
 memory = '2gb'
