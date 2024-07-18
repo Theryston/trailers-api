@@ -9,7 +9,9 @@ key or login credentials!
 - [x] Download trailers in high resolution
 - [x] Support for multiple platforms
 - [x] Webhook support
+- [x] Web application
 
-## Docs
+## Links
 
+- [X] [Web Application](https://trailers.theryston.dev)
 - [x] [Swagger UI](https://api-trailers.theryston.dev/docs)
