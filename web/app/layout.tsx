@@ -5,6 +5,7 @@ import { Link } from "@nextui-org/link";
 import { Divider } from "@nextui-org/divider";
 
 import { Providers } from "./providers";
+import GoogleAdsense from "./google-adsense";
 
 import { fontSans } from "@/config/fonts";
 
@@ -67,6 +68,8 @@ export default function RootLayout({
           </div>
         </Providers>
       </body>
+
+      <GoogleAdsense />
     </html>
   );
 }
