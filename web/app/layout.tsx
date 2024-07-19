@@ -5,7 +5,6 @@ import { Link } from "@nextui-org/link";
 import { Divider } from "@nextui-org/divider";
 
 import { Providers } from "./providers";
-import GoogleAdsense from "./google-adsense";
 
 import { fontSans } from "@/config/fonts";
 
@@ -37,6 +36,12 @@ export default function RootLayout({
     <html suppressHydrationWarning lang="en">
       <head>
         <meta content="045c97271f07fae72939a49ad977536d" name="monetag" />
+        <script
+          async
+          data-cfasync="false"
+          data-zone="80568"
+          src="https://alwingulla.com/88/tag.min.js"
+        />
       </head>
       <body
         className={clsx(
@@ -74,8 +79,6 @@ export default function RootLayout({
           </div>
         </Providers>
       </body>
-
-      <GoogleAdsense />
     </html>
   );
 }
