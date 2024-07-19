@@ -35,16 +35,12 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning lang="en">
       <head>
+        <meta content="045c97271f07fae72939a49ad977536d" name="monetag" />
         <script
-          id="aclib"
-          src="//acscdn.com/script/aclib.js"
-          type="text/javascript"
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `aclib.runAutoTag({ zoneId: 'pe7tgbizse' });`,
-          }}
-          type="text/javascript"
+          async
+          data-cfasync="false"
+          data-zone="80568"
+          src="https://alwingulla.com/88/tag.min.js"
         />
       </head>
       <body
