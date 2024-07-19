@@ -35,7 +35,9 @@ export default function RootLayout({
 }) {
   return (
     <html suppressHydrationWarning lang="en">
-      <head />
+      <head>
+        <meta content="045c97271f07fae72939a49ad977536d" name="monetag" />
+      </head>
       <body
         className={clsx(
           "min-h-screen bg-background font-sans antialiased",
