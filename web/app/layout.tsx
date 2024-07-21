@@ -3,6 +3,7 @@ import { Metadata, Viewport } from "next";
 import clsx from "clsx";
 import { Link } from "@nextui-org/link";
 import { Divider } from "@nextui-org/divider";
+import { GoogleTagManager } from "@next/third-parties/google";
 
 import { Providers } from "./providers";
 
@@ -43,6 +44,7 @@ export default function RootLayout({
           src="https://alwingulla.com/88/tag.min.js"
         />
       </head>
+      <GoogleTagManager gtmId="GTM-N8LBXLPR" />
       <body
         className={clsx(
           "min-h-screen bg-background font-sans antialiased",
