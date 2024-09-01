@@ -1,24 +1,28 @@
-import 'dotenv/config.js';
-import './check-process.js';
+import "dotenv/config.js";
+import "./check-process.js";
 import express from "express";
-import { promise as fastq } from 'fastq';
-import cors from 'cors';
-import getServices from './services/index.js';
-import worker from './worker.js';
-import { CONCURRENCY, PROCESS_STATUS } from './constants.js';
-import { log } from './utils/log.js';
-import findProcess from './db/find-process.js';
-import swaggerUi from 'swagger-ui-express';
-import specs from './swagger.js';
-import db from './db/index.js';
-import { processSchema, subtitlesSchema, trailersSchema } from './db/schema.js';
-import continueProcess from './continue-process.js';
-import { desc, eq, gt } from 'drizzle-orm';
+import { promise as fastq } from "fastq";
+import cors from "cors";
+import getServices from "./services/index.js";
+import worker from "./worker.js";
+import {
+  CONCURRENCY,
+  PROCESS_STATUS,
+  GLOBAL_TEMP_FOLDER,
+} from "./constants.js";
+import { log } from "./utils/log.js";
+import findProcess from "./db/find-process.js";
+import swaggerUi from "swagger-ui-express";
+import specs from "./swagger.js";
+import db from "./db/index.js";
+import { processSchema, subtitlesSchema, trailersSchema } from "./db/schema.js";
+import continueProcess from "./continue-process.js";
+import { desc, eq, gt } from "drizzle-orm";
 
 const app = express();
 app.use(express.json());
-app.use(cors('*'));
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs));
+app.use(cors("*"));
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(specs));
 
 const queue = fastq(worker, CONCURRENCY);
 
@@ -95,79 +99,80 @@ continueProcess(queue);
  *                   items:
  *                     type: string
  */
-app.post('/process', async (req, res) => {
-    let { serviceName, name, year, lang, callbackUrl, fullAudioTracks } = req.body;
+app.post("/process", async (req, res) => {
+  let { serviceName, name, year, lang, callbackUrl, fullAudioTracks } =
+    req.body;
 
-    try {
-        if (!name || !year) {
-            return res.status(400).json({
-                message: `Missing parameters: name=${name}, year=${year}`
-            });
-        }
-
-        if (!lang) {
-            lang = "en-US";
-        }
-
-        if (!serviceName) {
-            serviceName = "ALL";
-        }
-
-        let services = getServices();
-
-        if (serviceName !== "ALL") {
-            services = services.filter((service) => service.name === serviceName);
-        }
-
-        if (!services.length) {
-            return res.status(404).json({
-                message: `Service not found: ${serviceName}`,
-                availableServices: getServices().map((service) => service.name)
-            })
-        }
-
-        const processes = await db
-            .insert(processSchema)
-            .values({
-                status: PROCESS_STATUS.PENDING,
-                serviceName,
-                statusDetails: 'Process was created and is in queue',
-                services: services.map((service) => service.name).join('|'),
-                callbackUrl,
-                name,
-                year,
-                lang,
-                isCompleted: 0,
-                fullAudioTracks: fullAudioTracks ? 1 : 0,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            })
-            .returning()
-        const process = processes[0];
-
-        queue.push({
-            name,
-            year: String(year),
-            processId: process.id,
-            services,
-            lang,
-            fullAudioTracks: fullAudioTracks ? 1 : 0
-        });
-
-        res.status(201).json({
-            processId: process.id
-        })
-    } catch (error) {
-        log({
-            type: 'ERROR',
-            message: `Failed to add to queue: ${error.message}`,
-            level: 'normal'
-        });
-        return res.status(500).json({
-            message: 'Failed to add to queue'
-        });
+  try {
+    if (!name || !year) {
+      return res.status(400).json({
+        message: `Missing parameters: name=${name}, year=${year}`,
+      });
     }
-})
+
+    if (!lang) {
+      lang = "en-US";
+    }
+
+    if (!serviceName) {
+      serviceName = "ALL";
+    }
+
+    let services = getServices();
+
+    if (serviceName !== "ALL") {
+      services = services.filter((service) => service.name === serviceName);
+    }
+
+    if (!services.length) {
+      return res.status(404).json({
+        message: `Service not found: ${serviceName}`,
+        availableServices: getServices().map((service) => service.name),
+      });
+    }
+
+    const processes = await db
+      .insert(processSchema)
+      .values({
+        status: PROCESS_STATUS.PENDING,
+        serviceName,
+        statusDetails: "Process was created and is in queue",
+        services: services.map((service) => service.name).join("|"),
+        callbackUrl,
+        name,
+        year,
+        lang,
+        isCompleted: 0,
+        fullAudioTracks: fullAudioTracks ? 1 : 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    const process = processes[0];
+
+    queue.push({
+      name,
+      year: String(year),
+      processId: process.id,
+      services,
+      lang,
+      fullAudioTracks: fullAudioTracks ? 1 : 0,
+    });
+
+    res.status(201).json({
+      processId: process.id,
+    });
+  } catch (error) {
+    log({
+      type: "ERROR",
+      message: `Failed to add to queue: ${error.message}`,
+      level: "normal",
+    });
+    return res.status(500).json({
+      message: "Failed to add to queue",
+    });
+  }
+});
 
 /**
  * @swagger
@@ -233,68 +238,70 @@ app.post('/process', async (req, res) => {
  *                   items:
  *                     type: string
  */
-app.post('/process/by-trailer-page', async (req, res) => {
-    let { trailerPage, lang, callbackUrl, fullAudioTracks } = req.body;
+app.post("/process/by-trailer-page", async (req, res) => {
+  let { trailerPage, lang, callbackUrl, fullAudioTracks } = req.body;
 
-    if (!lang) {
-        lang = "en-US";
-    }
+  if (!lang) {
+    lang = "en-US";
+  }
 
-    if (!trailerPage) {
-        return res.status(400).json({
-            message: 'Missing parameters: trailerPage'
-        });
-    }
+  if (!trailerPage) {
+    return res.status(400).json({
+      message: "Missing parameters: trailerPage",
+    });
+  }
 
-    if (!trailerPage.startsWith('https://')) {
-        return res.status(400).json({
-            message: 'Invalid parameters: trailerPage'
-        });
-    }
+  if (!trailerPage.startsWith("https://")) {
+    return res.status(400).json({
+      message: "Invalid parameters: trailerPage",
+    });
+  }
 
-    const service = getServices().find((service) => new URL(trailerPage).hostname.includes(service.domain));
+  const service = getServices().find((service) =>
+    new URL(trailerPage).hostname.includes(service.domain)
+  );
 
-    if (!service) {
-        return res.status(404).json({
-            message: `Can't find the service for the trailer page: ${trailerPage}`,
-            availableDomains: getServices().map((service) => service.domain)
-        })
-    }
+  if (!service) {
+    return res.status(404).json({
+      message: `Can't find the service for the trailer page: ${trailerPage}`,
+      availableDomains: getServices().map((service) => service.domain),
+    });
+  }
 
-    const processes = await db
-        .insert(processSchema)
-        .values({
-            status: PROCESS_STATUS.PENDING,
-            serviceName: service.name,
-            statusDetails: 'Process was created and is in queue',
-            services: service.name,
-            callbackUrl,
-            lang,
-            name: null,
-            year: null,
-            isCompleted: 0,
-            trailerPage,
-            fullAudioTracks: fullAudioTracks ? 1 : 0,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        })
-        .returning()
-    const process = processes[0];
-
-    queue.push({
-        name: null,
-        year: null,
-        processId: process.id,
-        services: [service],
-        trailerPage,
-        lang,
-        fullAudioTracks: fullAudioTracks ? 1 : 0
+  const processes = await db
+    .insert(processSchema)
+    .values({
+      status: PROCESS_STATUS.PENDING,
+      serviceName: service.name,
+      statusDetails: "Process was created and is in queue",
+      services: service.name,
+      callbackUrl,
+      lang,
+      name: null,
+      year: null,
+      isCompleted: 0,
+      trailerPage,
+      fullAudioTracks: fullAudioTracks ? 1 : 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     })
+    .returning();
+  const process = processes[0];
 
-    res.status(201).json({
-        processId: process.id
-    })
-})
+  queue.push({
+    name: null,
+    year: null,
+    processId: process.id,
+    services: [service],
+    trailerPage,
+    lang,
+    fullAudioTracks: fullAudioTracks ? 1 : 0,
+  });
+
+  res.status(201).json({
+    processId: process.id,
+  });
+});
 
 /**
  * @swagger
@@ -390,18 +397,18 @@ app.post('/process/by-trailer-page', async (req, res) => {
  *                 message:
  *                   type: string
  */
-app.get('/process/:processId', async (req, res) => {
-    const { processId } = req.params;
-    const process = await findProcess(processId);
+app.get("/process/:processId", async (req, res) => {
+  const { processId } = req.params;
+  const process = await findProcess(processId);
 
-    if (!process?.id) {
-        return res.status(404).json({
-            message: 'Process not found'
-        });
-    }
+  if (!process?.id) {
+    return res.status(404).json({
+      message: "Process not found",
+    });
+  }
 
-    res.json(process);
-})
+  res.json(process);
+});
 
 /**
  * @swagger
@@ -482,44 +489,45 @@ app.get('/process/:processId', async (req, res) => {
  *                         updatedAt:
  *                           type: string
  */
-app.get('/trailers/feed', async (req, res) => {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+app.get("/trailers/feed", async (req, res) => {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const uniqueTrailers = await db
-        .select()
-        .from(trailersSchema)
-        .where(gt(trailersSchema.createdAt, sevenDaysAgo))
-        .orderBy(desc(trailersSchema.createdAt))
-        .groupBy(trailersSchema.processId)
-        .limit(15);
+  const uniqueTrailers = await db
+    .select()
+    .from(trailersSchema)
+    .where(gt(trailersSchema.createdAt, sevenDaysAgo))
+    .orderBy(desc(trailersSchema.createdAt))
+    .groupBy(trailersSchema.processId)
+    .limit(15);
 
-    const trailers = [];
-    for (const trailer of uniqueTrailers) {
-        const subtitles = await db
-            .select()
-            .from(subtitlesSchema)
-            .where(eq(subtitlesSchema.trailerId, trailer.id));
+  const trailers = [];
+  for (const trailer of uniqueTrailers) {
+    const subtitles = await db
+      .select()
+      .from(subtitlesSchema)
+      .where(eq(subtitlesSchema.trailerId, trailer.id));
 
-        const [process] = await db
-            .select()
-            .from(processSchema)
-            .where(eq(processSchema.id, trailer.processId));
+    const [process] = await db
+      .select()
+      .from(processSchema)
+      .where(eq(processSchema.id, trailer.processId));
 
-        if (!process || !process.isCompleted) continue;
-        const alreadyExistsPage = trailers.find(t => t.process.trailerPage === process.trailerPage);
-        if (alreadyExistsPage) continue;
+    if (!process || !process.isCompleted) continue;
+    const alreadyExistsPage = trailers.find(
+      (t) => t.process.trailerPage === process.trailerPage
+    );
+    if (alreadyExistsPage) continue;
 
-        trailers.push({
-            ...trailer,
-            process,
-            subtitles
-        });
-    }
+    trailers.push({
+      ...trailer,
+      process,
+      subtitles,
+    });
+  }
 
-    res.json(trailers);
+  res.json(trailers);
 });
-
 
 /**
  * @swagger
@@ -544,16 +552,16 @@ app.get('/trailers/feed', async (req, res) => {
  *                   domain:
  *                     type: string
  */
-app.get('/services', async (req, res) => {
-    let allServices = getServices();
-    allServices = allServices.map((service) => {
-        delete service.func;
+app.get("/services", async (req, res) => {
+  let allServices = getServices();
+  allServices = allServices.map((service) => {
+    delete service.func;
 
-        return service;
-    })
+    return service;
+  });
 
-    res.json(allServices);
-})
+  res.json(allServices);
+});
 
 /**
  * @swagger
@@ -571,19 +579,19 @@ app.get('/services', async (req, res) => {
  *               items:
  *                 type: string
  */
-app.get('/all-status', async (req, res) => {
-    return res.json(Object.values(PROCESS_STATUS));
-})
+app.get("/all-status", async (req, res) => {
+  return res.json(Object.values(PROCESS_STATUS));
+});
 
-app.get('/', (req, res) => {
-    res.redirect('/docs');
-})
+app.get("/", (req, res) => {
+  res.redirect("/docs");
+});
 
-const PORT = Number(process.env.PORT || '3000');
+const PORT = Number(process.env.PORT || "3000");
 app.listen(PORT, () => {
-    log({
-        type: 'INFO',
-        message: `Server started on port ${PORT}`,
-        level: 'important'
-    });
-})
+  log({
+    type: "INFO",
+    message: `Server started on port ${PORT} | Temp Folder: ${GLOBAL_TEMP_FOLDER}`,
+    level: "important",
+  });
+});
