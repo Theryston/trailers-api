@@ -1,6 +1,7 @@
 import appleTv from "./appleTv/index.js";
 import netflix from "./netflix/index.js";
 import primeVideo from "./primeVideo/index.js";
+import imdb from "./imdb/index.js";
 
 export default function getServices() {
   return [
@@ -21,6 +22,12 @@ export default function getServices() {
       friendlyName: "Netflix",
       domain: "netflix.com",
       func: netflix,
+    },
+    {
+      name: "IMDB",
+      friendlyName: "IMDb",
+      domain: "imdb.com",
+      func: imdb,
     },
   ];
 }
