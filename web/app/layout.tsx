@@ -35,15 +35,6 @@ export default function RootLayout({
 }) {
   return (
     <html suppressHydrationWarning lang="en">
-      <head>
-        <meta content="045c97271f07fae72939a49ad977536d" name="monetag" />
-        <script
-          async
-          data-cfasync="false"
-          data-zone="80568"
-          src="https://alwingulla.com/88/tag.min.js"
-        />
-      </head>
       <GoogleTagManager gtmId="GTM-N8LBXLPR" />
       <body
         className={clsx(
