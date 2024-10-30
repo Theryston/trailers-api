@@ -13,7 +13,7 @@ const client = new S3Client({
   },
 });
 
-export async function tempUpload(filePath) {
+export async function uploadFile(filePath) {
   const fileName = path.basename(filePath);
   const key = `${uuid()}-${fileName}`;
   const mimeType = mime.lookup(fileName);
@@ -28,9 +28,7 @@ export async function tempUpload(filePath) {
 
   await client.send(command);
 
-  const urlEndpoint = new URL(process.env.S3_ENDPOINT);
-
-  const url = `https://${process.env.S3_BUCKET_NAME}.${urlEndpoint.host}/${key}`;
+  const url = `${process.env.BASE_FILES_URL}/${key}`;
 
   return url;
 }
