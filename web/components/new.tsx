@@ -11,7 +11,6 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Select, SelectItem } from "@nextui-org/select";
 
-import { client } from "@/lib/api";
 import { LANGUAGES } from "@/lib/languages";
 import {
   useCreateProcess,
