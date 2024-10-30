@@ -11,6 +11,8 @@ import { QueryClient } from "@tanstack/react-query";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 
+const FEED_QUERY_HASH = '["feed"]';
+
 export interface ProvidersProps {
   children: React.ReactNode;
   themeProps?: ThemeProviderProps;
@@ -38,10 +40,34 @@ export function Providers({ children, themeProps }: ProvidersProps) {
 }
 
 function QueryClientProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient({}));
+  const [queryClient] = useState(() => new QueryClient());
 
   const persister = createSyncStoragePersister({
     storage: window.localStorage,
+    serialize: (data) => {
+      const feedQuery = data.clientState.queries.find(
+        (query) => query.queryHash === FEED_QUERY_HASH
+      );
+
+      if (feedQuery) {
+        const data: any = feedQuery.state.data || { pages: [] };
+
+        feedQuery.state.data = {
+          pageParams: [data.pageParams?.[0]].filter((p) => p),
+          pages: [data.pages?.[0]].filter((p) => p),
+        };
+      }
+
+      const queryWithoutFeed = data.clientState.queries.filter(
+        (query) => query.queryHash !== FEED_QUERY_HASH
+      );
+
+      data.clientState.queries = feedQuery
+        ? [feedQuery, ...queryWithoutFeed]
+        : queryWithoutFeed;
+
+      return JSON.stringify(data);
+    },
   });
 
   return (
