@@ -9,7 +9,7 @@ import Trailer from "./trailer";
 import { useFeed } from "@/lib/hooks";
 
 export default function ListTrailers() {
-  const { data: pagination, fetchNextPage, hasNextPage } = useFeed(2);
+  const { data: pagination, fetchNextPage, hasNextPage } = useFeed();
   const trailers = useMemo(() => {
     return (
       pagination?.pages.flatMap((page) => page).flatMap((page) => page.items) ||
