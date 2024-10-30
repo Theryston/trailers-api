@@ -60,7 +60,10 @@ function Loader() {
   return (
     <div className="flex flex-col gap-4">
       {Array.from({ length: 3 }).map((_, index) => (
-        <Skeleton key={index} className="w-full h-[300px] rounded-large" />
+        <Skeleton
+          key={index}
+          className="w-full h-[300px] rounded-large md:min-w-[500px]"
+        />
       ))}
     </div>
   );
