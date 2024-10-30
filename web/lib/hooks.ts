@@ -25,10 +25,10 @@ export function useProcess(id: string, realTime = false) {
   });
 }
 
-export function useFeed(limit: number) {
+export function useFeed() {
   return useInfiniteQuery({
-    queryKey: ["feed", limit],
-    queryFn: ({ pageParam = 1 }) => getFeed(pageParam, limit),
+    queryKey: ["feed"],
+    queryFn: ({ pageParam = 1 }) => getFeed(pageParam),
     getNextPageParam: (lastPage) => lastPage.nextPageCursor,
     initialPageParam: 1,
   });

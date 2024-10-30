@@ -12,10 +12,8 @@ export const getProcess = async (id: string) => {
   return data;
 };
 
-export const getFeed = async (page: number, limit: number) => {
-  const { data } = await client.get(
-    `/trailers/feed?page=${page}&limit=${limit}`
-  );
+export const getFeed = async (page: number) => {
+  const { data } = await client.get(`/trailers/feed?page=${page}`);
 
   return data;
 };
