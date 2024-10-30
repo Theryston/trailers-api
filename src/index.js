@@ -512,7 +512,7 @@ app.get("/trailers/feed", async (req, res) => {
     .innerJoin(processSchema, eq(trailersSchema.processId, processSchema.id))
     .where(eq(processSchema.isCompleted, 1))
     .where(eq(processSchema.status, PROCESS_STATUS.DONE))
-    .groupBy(trailersSchema.processId)
+    .groupBy(processSchema.trailerPage)
     .orderBy(desc(trailersSchema.createdAt))
     .limit(limit)
     .offset(limit * (page - 1));
@@ -523,7 +523,7 @@ app.get("/trailers/feed", async (req, res) => {
   }));
 
   const total = await db
-    .select({ count: countDistinct(trailersSchema.processId) })
+    .select({ count: countDistinct(processSchema.trailerPage) })
     .from(trailersSchema)
     .innerJoin(processSchema, eq(trailersSchema.processId, processSchema.id))
     .where(eq(processSchema.isCompleted, 1))
