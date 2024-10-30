@@ -2,14 +2,20 @@
 
 import { useMemo } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { Spinner } from "@nextui-org/spinner";
+import { Skeleton } from "@nextui-org/skeleton";
 
 import Trailer from "./trailer";
 
 import { useFeed } from "@/lib/hooks";
 
 export default function ListTrailers() {
-  const { data: pagination, fetchNextPage, hasNextPage } = useFeed();
+  const {
+    data: pagination,
+    fetchNextPage,
+    hasNextPage,
+    isLoading,
+    isPending,
+  } = useFeed();
   const trailers = useMemo(() => {
     return (
       pagination?.pages.flatMap((page) => page).flatMap((page) => page.items) ||
@@ -27,6 +33,8 @@ export default function ListTrailers() {
           </p>
         </div>
 
+        {(isLoading || isPending) && <Loader />}
+
         <InfiniteScroll
           className="flex flex-col gap-4"
           dataLength={trailers.length}
@@ -36,11 +44,7 @@ export default function ListTrailers() {
             </div>
           }
           hasMore={hasNextPage}
-          loader={
-            <div className="w-full h-20 flex justify-center items-center">
-              <Spinner />
-            </div>
-          }
+          loader={<Loader />}
           next={fetchNextPage}
         >
           {trailers.map((t: any) => (
@@ -48,6 +52,16 @@ export default function ListTrailers() {
           ))}
         </InfiniteScroll>
       </div>
+    </div>
+  );
+}
+
+function Loader() {
+  return (
+    <div className="flex flex-col gap-4">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <Skeleton key={index} className="w-full h-[300px] rounded-large" />
+      ))}
     </div>
   );
 }

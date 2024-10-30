@@ -23,6 +23,7 @@
 		"@nextui-org/navbar": "2.0.34",
 		"@nextui-org/progress": "^2.0.32",
 		"@nextui-org/select": "^2.2.3",
+		"@nextui-org/skeleton": "^2.0.32",
 		"@nextui-org/snippet": "2.0.39",
 		"@nextui-org/switch": "2.0.32",
 		"@nextui-org/system": "2.2.1",
