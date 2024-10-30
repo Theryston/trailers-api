@@ -4,7 +4,6 @@ import { Card, CardBody, CardHeader } from "@nextui-org/card";
 import { Tabs, Tab } from "@nextui-org/tabs";
 import { Autocomplete, AutocompleteItem } from "@nextui-org/autocomplete";
 import { Switch } from "@nextui-org/switch";
-import useSWR from "swr";
 import { useCallback, useState } from "react";
 import { Input } from "@nextui-org/input";
 import { Button } from "@nextui-org/button";
@@ -12,8 +11,13 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Select, SelectItem } from "@nextui-org/select";
 
-import { client, fetcher } from "@/lib/api";
+import { client } from "@/lib/api";
 import { LANGUAGES } from "@/lib/languages";
+import {
+  useCreateProcess,
+  useCreateProcessByTrailerPage,
+  useServices,
+} from "@/lib/hooks";
 
 export default function New() {
   return (
@@ -37,11 +41,12 @@ export default function New() {
 
 function PageUrl() {
   const router = useRouter();
-  const { data: services } = useSWR("/services", fetcher);
+  const { data: services } = useServices();
   const [pageUrl, setPageUrl] = useState("");
   const [langValue, setLangValue] = useState("en-US");
   const [fullAudioTracksValue, setFullAudioTracksValue] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const { mutateAsync: createProcessByTrailerPage, isPending: isLoading } =
+    useCreateProcessByTrailerPage();
 
   const onSubmit = useCallback(async () => {
     if (!pageUrl) {
@@ -68,11 +73,7 @@ function PageUrl() {
     }
 
     try {
-      setIsLoading(true);
-
-      const {
-        data: { processId },
-      } = await client.post("/process/by-trailer-page", {
+      const { processId } = await createProcessByTrailerPage({
         trailerPage: pageUrl,
         fullAudioTracks: fullAudioTracksValue,
         lang: fullAudioTracksValue ? undefined : langValue,
@@ -85,10 +86,8 @@ function PageUrl() {
       } else {
         toast.error("Failed to download trailers");
       }
-    } finally {
-      setIsLoading(false);
     }
-  }, [pageUrl, langValue, fullAudioTracksValue]);
+  }, [pageUrl, langValue, fullAudioTracksValue, createProcessByTrailerPage]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -131,14 +130,15 @@ const YEARS = Array.from(
 }));
 
 function Search() {
-  const { data: services } = useSWR("/services", fetcher);
+  const { data: services } = useServices();
   const [service, setService] = useState("");
   const [name, setName] = useState("");
   const [langValue, setLangValue] = useState("en-US");
   const [fullAudioTracksValue, setFullAudioTracksValue] = useState(true);
   const [yearValue, setYearValue] = useState("");
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const { mutateAsync: createProcess, isPending: isLoading } =
+    useCreateProcess();
 
   const servicesOptions = [
     { value: "ALL", label: "All Services" },
@@ -181,11 +181,7 @@ function Search() {
     }
 
     try {
-      setIsLoading(true);
-
-      const {
-        data: { processId },
-      } = await client.post("/process", {
+      const { processId } = await createProcess({
         serviceName: service,
         name,
         year: yearValue,
@@ -200,10 +196,15 @@ function Search() {
       } else {
         toast.error("Failed to download trailers");
       }
-    } finally {
-      setIsLoading(false);
     }
-  }, [service, name, yearValue, langValue, fullAudioTracksValue]);
+  }, [
+    service,
+    name,
+    yearValue,
+    langValue,
+    fullAudioTracksValue,
+    createProcess,
+  ]);
 
   return (
     <div className="flex flex-col gap-4">

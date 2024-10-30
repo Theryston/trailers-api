@@ -1,16 +1,15 @@
 "use client";
 
-import useSWR from "swr";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { CircularProgress } from "@nextui-org/progress";
 import { Link } from "@nextui-org/link";
 import { Button } from "@nextui-org/button";
 
-import { fetcher } from "@/lib/api";
 import { LANGUAGES } from "@/lib/languages";
 import Trailer from "@/components/trailer";
+import { useProcess, useServices } from "@/lib/hooks";
 
 type Props = {
   id: string;
@@ -18,11 +17,22 @@ type Props = {
 };
 
 export default function Content({ id, process: cachedProcess }: Props) {
-  const { data: processRequested, error } = useSWR(`/process/${id}`, fetcher, {
-    refreshInterval: cachedProcess.isCompleted !== 1 ? 2 * 1000 : 0,
-  });
+  const [isCompleted, setIsCompleted] = useState(
+    cachedProcess.isCompleted !== 1
+  );
+
+  const { data: processRequested, error } = useProcess(id, !isCompleted);
+
   const router = useRouter();
   const process = processRequested || cachedProcess;
+
+  useEffect(() => {
+    if (processRequested) {
+      setIsCompleted(processRequested.isCompleted === 1);
+    } else {
+      setIsCompleted(cachedProcess.isCompleted !== 1);
+    }
+  }, [processRequested?.isCompleted]);
 
   useEffect(() => {
     if (error) {
@@ -44,7 +54,7 @@ export default function Content({ id, process: cachedProcess }: Props) {
 }
 
 function Process({ process }: { process: any }) {
-  const { data: services } = useSWR("/services", fetcher);
+  const { data: services } = useServices();
 
   const servicesOptions = [
     { value: "ALL", label: "All Services" },

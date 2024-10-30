@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "generate": "drizzle-kit generate:sqlite"
+    "generate": "drizzle-kit generate",
+    "migrate": "drizzle-kit migrate"
   },
   "keywords": [],
   "author": "",
@@ -20,7 +21,7 @@
     "cheerio": "1.0.0-rc.12",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "drizzle-orm": "^0.30.6",
+    "drizzle-orm": "^0.36.0",
     "express": "^4.19.2",
     "fastq": "^1.17.1",
     "ffmpeg-static": "^5.1.0",
@@ -38,6 +39,6 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.20.14"
+    "drizzle-kit": "^0.27.0"
   }
 }

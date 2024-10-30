@@ -1,8 +1,6 @@
 {
-  "version": "5",
+  "version": "6",
   "dialect": "sqlite",
-  "id": "5bb4e9d6-e580-46ca-bf90-e824fff93fe0",
-  "prevId": "2013c0e6-16fe-4298-93cd-2526825ce85f",
   "tables": {
     "process": {
       "name": "process",
@@ -118,7 +116,8 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "subtitles": {
       "name": "subtitles",
@@ -171,19 +170,20 @@
         "subtitles_trailer_id_trailers_id_fk": {
           "name": "subtitles_trailer_id_trailers_id_fk",
           "tableFrom": "subtitles",
-          "tableTo": "trailers",
           "columnsFrom": [
             "trailer_id"
           ],
+          "tableTo": "trailers",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "trailers": {
       "name": "trailers",
@@ -243,25 +243,28 @@
         "trailers_process_id_process_id_fk": {
           "name": "trailers_process_id_process_id_fk",
           "tableFrom": "trailers",
-          "tableTo": "process",
           "columnsFrom": [
             "process_id"
           ],
+          "tableTo": "process",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     }
   },
   "enums": {},
   "_meta": {
-    "schemas": {},
     "tables": {},
     "columns": {}
-  }
+  },
+  "id": "5bb4e9d6-e580-46ca-bf90-e824fff93fe0",
+  "prevId": "2013c0e6-16fe-4298-93cd-2526825ce85f",
+  "views": {}
 }

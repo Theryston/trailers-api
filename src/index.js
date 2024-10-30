@@ -17,7 +17,7 @@ import specs from "./swagger.js";
 import db from "./db/index.js";
 import { processSchema, subtitlesSchema, trailersSchema } from "./db/schema.js";
 import continueProcess from "./continue-process.js";
-import { desc, eq, gt } from "drizzle-orm";
+import { and, count, countDistinct, desc, eq, gt } from "drizzle-orm";
 
 const app = express();
 app.use(express.json());
@@ -416,6 +416,19 @@ app.get("/process/:processId", async (req, res) => {
  *   get:
  *     summary: Get some trailers from the database
  *     tags: [Trailers]
+ *     parameters:
+ *       - name: limit
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: number
+ *           default: 10
+ *       - name: page
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: number
+ *           default: 1
  *     responses:
  *       200:
  *         description: The list of trailers
@@ -490,43 +503,40 @@ app.get("/process/:processId", async (req, res) => {
  *                           type: string
  */
 app.get("/trailers/feed", async (req, res) => {
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const limit = Number(req.query.limit) || 10;
+  const page = Number(req.query.page) || 1;
 
-  const uniqueTrailers = await db
+  const trailers = await db
     .select()
     .from(trailersSchema)
-    .where(gt(trailersSchema.createdAt, sevenDaysAgo))
-    .orderBy(desc(trailersSchema.createdAt))
+    .innerJoin(processSchema, eq(trailersSchema.processId, processSchema.id))
+    .where(eq(processSchema.isCompleted, 1))
+    .where(eq(processSchema.status, PROCESS_STATUS.DONE))
     .groupBy(trailersSchema.processId)
-    .limit(15);
+    .orderBy(desc(trailersSchema.createdAt))
+    .limit(limit)
+    .offset(limit * (page - 1));
 
-  const trailers = [];
-  for (const trailer of uniqueTrailers) {
-    const subtitles = await db
-      .select()
-      .from(subtitlesSchema)
-      .where(eq(subtitlesSchema.trailerId, trailer.id));
+  const items = trailers.map(({ trailers, process }) => ({
+    ...trailers,
+    process,
+  }));
 
-    const [process] = await db
-      .select()
-      .from(processSchema)
-      .where(eq(processSchema.id, trailer.processId));
+  const total = await db
+    .select({ count: countDistinct(trailersSchema.processId) })
+    .from(trailersSchema)
+    .innerJoin(processSchema, eq(trailersSchema.processId, processSchema.id))
+    .where(eq(processSchema.isCompleted, 1))
+    .where(eq(processSchema.status, PROCESS_STATUS.DONE));
 
-    if (!process || !process.isCompleted) continue;
-    const alreadyExistsPage = trailers.find(
-      (t) => t.process.trailerPage === process.trailerPage
-    );
-    if (alreadyExistsPage) continue;
+  const totalCount = total[0].count;
+  const hasNextPage = totalCount > page * limit;
 
-    trailers.push({
-      ...trailer,
-      process,
-      subtitles,
-    });
-  }
-
-  res.json(trailers);
+  res.json({
+    items,
+    nextPageCursor: hasNextPage ? page + 1 : null,
+    total: totalCount,
+  });
 });
 
 /**

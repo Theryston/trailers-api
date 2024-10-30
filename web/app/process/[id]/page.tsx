@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import Content from "./content";
 
-import { client } from "@/lib/api";
+import { getProcess } from "@/lib/fetchers";
 
 type Props = {
   params: {
@@ -12,7 +12,7 @@ type Props = {
 
 export default async function Page({ params }: Props) {
   try {
-    const { data: process } = await client.get(`/process/${params.id}`);
+    const process = await getProcess(params.id);
 
     if (!process) return redirect("/");
 

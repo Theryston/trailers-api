@@ -1,8 +1,6 @@
 {
-  "version": "5",
+  "version": "6",
   "dialect": "sqlite",
-  "id": "d44506dd-35a9-43a4-bcd7-c06e34bb7e2b",
-  "prevId": "293fdb9e-7363-414e-8a85-9b9ca392d1e5",
   "tables": {
     "process": {
       "name": "process",
@@ -110,7 +108,8 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "trailers": {
       "name": "trailers",
@@ -163,25 +162,28 @@
         "trailers_process_id_process_id_fk": {
           "name": "trailers_process_id_process_id_fk",
           "tableFrom": "trailers",
-          "tableTo": "process",
           "columnsFrom": [
             "process_id"
           ],
+          "tableTo": "process",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     }
   },
   "enums": {},
   "_meta": {
-    "schemas": {},
     "tables": {},
     "columns": {}
-  }
+  },
+  "id": "d44506dd-35a9-43a4-bcd7-c06e34bb7e2b",
+  "prevId": "293fdb9e-7363-414e-8a85-9b9ca392d1e5",
+  "views": {}
 }
