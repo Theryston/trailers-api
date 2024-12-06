@@ -7,11 +7,12 @@ key or login credentials!
 ## Features
 
 - [x] Download trailers in high resolution
+- [x] Support for multiple languages
 - [x] Support for multiple platforms
 - [x] Webhook support
 - [x] Web application
 
 ## Links
 
-- [X] [Web Application](https://trailersdownload.download)
+- [x] [Web Application](https://trailersdownload.download)
 - [x] [Swagger UI](https://api.trailersdownload.download/docs)
