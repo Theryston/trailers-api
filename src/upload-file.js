@@ -22,7 +22,6 @@ export async function uploadFile(filePath) {
     Bucket: process.env.S3_BUCKET_NAME,
     Key: key,
     Body: fs.createReadStream(filePath),
-    ACL: "public-read",
     ContentType: mimeType || undefined,
   });
 
