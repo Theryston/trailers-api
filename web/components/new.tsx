@@ -19,17 +19,36 @@ import {
 } from "@/lib/hooks";
 
 export default function New() {
+  const [activeTab, setActiveTab] = useState("page-url");
+  const { data: services } = useServices();
+
   return (
-    <Card className="h-fit w-full md:w-1/2 md:min-w-[500px]">
-      <CardHeader className="flex flex-col gap-4">
-        <h2 className="text-2xl font-bold">Download Trailers</h2>
-      </CardHeader>
-      <CardBody>
-        <Tabs fullWidth>
-          <Tab key="page-url" title="By Page URL">
+    <Card className="h-fit w-full border-none rounded-none" shadow="none">
+      <CardBody className="flex justify-center items-center flex-col gap-4 p-0">
+        {activeTab === "page-url" && (
+          <p className="text-sm text-black font-bold ">
+            Insert a page URL from any of these services:{" "}
+            {services?.map((service: any) => service.friendlyName).join(", ")}{" "}
+            And this tool will automatically download the trailer for you
+          </p>
+        )}
+        {activeTab === "search" && (
+          <p className="text-sm text-black font-bold ">
+            Insert data from the movie or tv show and this tool will
+            automatically search and download the trailers from any of these
+            services:{" "}
+            {services?.map((service: any) => service.friendlyName).join(", ")}
+          </p>
+        )}
+        <Tabs
+          fullWidth
+          selectedKey={activeTab}
+          onSelectionChange={(key) => setActiveTab(key as string)}
+        >
+          <Tab className="w-full" key="page-url" title="By Page URL">
             <PageUrl />
           </Tab>
-          <Tab key="search" title="Search Trailer">
+          <Tab className="w-full" key="search" title="Search Trailer">
             <Search />
           </Tab>
         </Tabs>
@@ -40,7 +59,6 @@ export default function New() {
 
 function PageUrl() {
   const router = useRouter();
-  const { data: services } = useServices();
   const [pageUrl, setPageUrl] = useState("");
   const [langValue, setLangValue] = useState("en-US");
   const [fullAudioTracksValue, setFullAudioTracksValue] = useState(true);
@@ -89,12 +107,7 @@ function PageUrl() {
   }, [pageUrl, langValue, fullAudioTracksValue, createProcessByTrailerPage]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <p className="text-sm text-gray-500 text-center">
-        Insert a page URL from any of these services:{" "}
-        {services?.map((service: any) => service.friendlyName).join(", ")} And
-        this tool will automatically download the trailer for you
-      </p>
+    <div className="flex flex-col gap-4 w-full">
       <Input
         label="Page URL"
         placeholder="https://www.netflix.com/title/81223025"
@@ -206,14 +219,7 @@ function Search() {
   ]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <p className="text-sm text-gray-500 text-center">
-        Insert some data from the movie or tv show and this tool will
-        automatically search and download the trailers from any of these
-        services:{" "}
-        {services?.map((service: any) => service.friendlyName).join(", ")}
-      </p>
-
+    <div className="flex flex-col gap-4 w-full">
       <Select
         items={servicesOptions}
         label="Service"
@@ -291,7 +297,7 @@ function DefaultFields({
   onLangChange,
 }: DefaultFieldProps) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 w-full">
       <Switch
         isSelected={fullAudioTracksValue}
         size="sm"

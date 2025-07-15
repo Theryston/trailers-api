@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { CircularProgress } from "@nextui-org/progress";
 import { Link } from "@nextui-org/link";
 import { Button } from "@nextui-org/button";
-
 import { LANGUAGES } from "@/lib/languages";
 import Trailer from "@/components/trailer";
 import { useProcess, useServices } from "@/lib/hooks";
@@ -42,12 +41,7 @@ export default function Content({ id, process: cachedProcess }: Props) {
   }, [error, router]);
 
   return (
-    <div className="w-full h-full flex justify-center pt-16 gap-4 relative">
-      <Link className="absolute top-0 left-0" href="/">
-        <Button color="primary" size="sm" variant="flat">
-          Back
-        </Button>
-      </Link>
+    <div className="w-full h-full flex flex-col justify-center gap-4 relative">
       <Process process={process} />
     </div>
   );
@@ -63,86 +57,97 @@ function Process({ process }: { process: any }) {
   ];
 
   return (
-    <div className="w-full h-full flex items-center flex-col gap-5">
-      <div className="w-full flex flex-col gap-4 max-w-xl">
-        {process.name && (
-          <div className="flex justify-between w-full">
-            <p className="font-bold">Name:</p>
-            <p className="text-gray-500">{process.name}</p>
-          </div>
-        )}
-
-        <div className="flex justify-between w-full flex-wrap">
-          <p className="font-bold">Page URL:</p>
-          {process.trailerPage ? (
-            <Link
-              isExternal
-              className="inline-block max-w-xs truncate"
-              href={process.trailerPage}
-            >
-              {process.trailerPage}
-            </Link>
-          ) : (
-            <p className="text-gray-500">Not found</p>
+    <div className="w-full h-full flex flex-col gap-6">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          Informações Básicas
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {process.name && (
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-medium text-gray-600">Nome</p>
+              <p className="text-gray-800 text-xs">{process.name}</p>
+            </div>
           )}
-        </div>
-
-        <div className="flex justify-between w-full">
-          <p className="font-bold">Status:</p>
-          <p className="text-gray-500">{process.status}</p>
-        </div>
-
-        <div className="flex justify-between w-full">
-          <p className="font-bold">Service Name:</p>
-          <p className="text-gray-500">
-            {
-              servicesOptions.find((s) => s.value === process.serviceName)
-                ?.label
-            }
-          </p>
-        </div>
-
-        <div className="flex justify-between w-full">
-          <p className="font-bold">Language:</p>
-          <p className="text-gray-500">
-            {process.lang
-              ? LANGUAGES.find((l) => l.value === process.lang)?.label
-              : "Not found"}
-          </p>
-        </div>
-
-        {process.year && (
-          <div className="flex justify-between w-full">
-            <p className="font-bold">Year:</p>
-            <p className="text-gray-500">{process.year}</p>
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-medium text-gray-600">Status</p>
+            <p className="text-gray-800 text-xs capitalize">{process.status}</p>
           </div>
-        )}
-
-        <div className="flex justify-between w-full">
-          <p className="font-bold">Full Audio Tracks:</p>
-          <p className="text-gray-500">
-            {process.fullAudioTracks ? "Yes" : "No"}
-          </p>
-        </div>
-
-        <div className="flex justify-between w-full flex-wrap">
-          <p className="font-bold">All Included Services:</p>
-          <p className="text-gray-500">
-            {process.services
-              .split("|")
-              .map(
-                (service: any) =>
-                  servicesOptions.find((s) => s.value === service)?.label
-              )
-              .join(", ")}
-          </p>
-        </div>
-
-        <div className="flex justify-between w-full flex-wrap">
-          <p className="font-bold">Details:</p>
-          <p className="text-gray-500 inline-block max-w-xs truncate">
-            {process.statusDetails}
-          </p>
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-medium text-gray-600">Baixado de</p>
+            <p className="text-gray-800 text-xs">
+              {servicesOptions.find((s) => s.value === process.serviceName)
+                ?.label || "N/A"}
+            </p>
+          </div>
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-medium text-gray-600">Idioma</p>
+            <p className="text-gray-800 text-xs">
+              {process.lang
+                ? LANGUAGES.find((l) => l.value === process.lang)?.label
+                : "Não encontrado"}
+            </p>
+          </div>
+          {process.year && (
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-medium text-gray-600">Ano</p>
+              <p className="text-gray-800 text-xs">{process.year}</p>
+            </div>
+          )}
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-medium text-gray-600">
+              Faixas de Áudio Completas
+            </p>
+            <p className="text-gray-800 text-xs">
+              {process.fullAudioTracks ? "Sim" : "Não"}
+            </p>
+          </div>
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-medium text-gray-600">URL do Trailer</p>
+            {process.trailerPage ? (
+              <Link
+                isExternal
+                className="text-blue-600 hover:text-blue-800 transition-colors break-all text-xs"
+                href={process.trailerPage}
+              >
+                {process.trailerPage}
+              </Link>
+            ) : (
+              <p className="text-gray-800 italic text-xs">URL não encontrada</p>
+            )}
+          </div>
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-medium text-gray-600">
+              Serviços Incluídos
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {process.services
+                .split("|")
+                .map((service: any, index: number) => {
+                  const serviceLabel = servicesOptions.find(
+                    (s) => s.value === service
+                  )?.label;
+                  return serviceLabel ? (
+                    <span
+                      key={index}
+                      className="px-3 py-1 h-fit w-fit bg-blue-100 text-blue-800 rounded-full text-xs"
+                    >
+                      {serviceLabel}
+                    </span>
+                  ) : null;
+                })}
+            </div>
+          </div>
+          {process.statusDetails && (
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-medium text-gray-600">
+                Serviços Incluídos
+              </p>
+              <p className="text-black text-xs leading-relaxed">
+                {process.statusDetails}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -152,14 +157,16 @@ function Process({ process }: { process: any }) {
             <p className="text-gray-500 text-center">No trailers found</p>
           )}
 
-          <div className="w-full flex flex-wrap justify-center gap-4 py-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
             {process.trailers?.map((trailer: any) => (
               <Trailer key={trailer.id} trailer={trailer} />
             ))}
           </div>
         </>
       ) : (
-        <CircularProgress className="mt-5" label="Processing trailers..." />
+        <div className="flex flex-col items-center justify-center h-full">
+          <CircularProgress className="mt-5" label="Processing trailers..." />
+        </div>
       )}
     </div>
   );

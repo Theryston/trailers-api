@@ -1,6 +1,5 @@
 "use client";
 
-import { Image } from "@nextui-org/image";
 import axios from "axios";
 import {
   Modal,
@@ -9,8 +8,7 @@ import {
   ModalBody,
   useDisclosure,
 } from "@nextui-org/modal";
-import { ArrowTopRightIcon } from "@radix-ui/react-icons";
-import { Card, CardFooter } from "@nextui-org/card";
+import { Card } from "@nextui-org/card";
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Link } from "@nextui-org/link";
@@ -25,11 +23,15 @@ function truncateText(text: string, maxLength: number) {
 export default function Trailer({
   trailer,
   process,
-  showProcess = false,
+  clickable = false,
+  customHeight = "235px",
+  ignoreButtons = false,
 }: {
   trailer: any;
   process?: any;
-  showProcess?: boolean;
+  clickable?: boolean;
+  customHeight?: string;
+  ignoreButtons?: boolean;
 }) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadingProgress, setDownloadingProgress] = useState(0);
@@ -73,71 +75,69 @@ export default function Trailer({
   }, [isDownloading, trailer.url]);
 
   return (
-    <Card isFooterBlurred className="border-none relative" radius="lg">
-      {showProcess && (
+    <Card
+      isFooterBlurred
+      className="border-none relative w-full h-full"
+      style={{
+        backgroundImage: `url(${trailer.thumbnailUrl})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        height: customHeight,
+      }}
+      radius="lg"
+    >
+      {clickable && (
         <Link
-          isExternal
-          className="absolute right-1 top-1 z-50"
+          className="absolute top-0 left-0 w-full h-full z-30 hover:bg-black/50 transition-all duration-300"
           href={`/process/${trailer.processId}`}
-        >
-          <Button
-            isIconOnly
-            className="flex justify-center items-center"
-            color="success"
-            size="sm"
-          >
-            <ArrowTopRightIcon />
-          </Button>
-        </Link>
+        />
       )}
-      <Image
-        className="object-cover max-w-full"
-        height={300}
-        src={trailer.thumbnailUrl}
-        width={500}
-      />
-      <CardFooter className="justify-between gap-2 flex-col before:bg-white/10 border-white/20 border-1 overflow-hidden py-1 absolute before:rounded-xl rounded-large bottom-1 w-[calc(100%_-_8px)] shadow-small ml-1 z-10">
-        <div className="flex flex-col gap-2 w-full">
-          <p className="w-full truncate text-white">
-            <b>Title:</b> {trailer.title}
+      <div className="absolute bottom-0 h-fit z-40 w-full flex-col gap-2 p-2 bg-gradient-to-t from-black to-transparent">
+        <p className="w-full truncate text-white">
+          <b>Title:</b> {trailer.title}
+        </p>
+        {process?.name ? (
+          <p className="w-full text-white">
+            <b>Process Name:</b> {truncateText(process.name, 28)}
           </p>
-          {process?.name ? (
+        ) : (
+          process?.trailerPage && (
             <p className="w-full text-white">
-              <b>Process Name:</b> {truncateText(process.name, 28)}
+              <b>Page URL:</b>{" "}
+              <Link isExternal href={process.trailerPage}>
+                {truncateText(process.trailerPage, 28)}
+              </Link>
             </p>
-          ) : (
-            <>
-              {process?.trailerPage && (
-                <p className="w-full text-white">
-                  <b>Page URL:</b>{" "}
-                  <Link isExternal href={process.trailerPage}>
-                    {truncateText(process.trailerPage, 28)}
-                  </Link>
-                </p>
-              )}
-            </>
-          )}
-        </div>
-        <div className="flex justify-between gap-2 w-full">
-          <Button
-            fullWidth
-            color="primary"
-            isLoading={isDownloading}
-            size="sm"
-            onClick={download}
-          >
-            {isDownloading ? `${downloadingProgress}%` : "Download"}
-          </Button>
-          <Link isExternal className="w-full" href={trailer.url}>
-            <Button fullWidth color="primary" size="sm">
-              Open
+          )
+        )}
+
+        {!ignoreButtons && (
+          <div className="flex justify-between gap-2 w-full">
+            <Button
+              fullWidth
+              variant="faded"
+              isLoading={isDownloading}
+              size="sm"
+              onClick={download}
+            >
+              {isDownloading ? `${downloadingProgress}%` : "Download"}
             </Button>
-          </Link>
-          <Button fullWidth color="primary" size="sm" onClick={onOpenSubtitles}>
-            Subtitles
-          </Button>
-        </div>
-      </CardFooter>
+            <Link isExternal className="w-full" href={trailer.url}>
+              <Button fullWidth size="sm" variant="faded">
+                Open
+              </Button>
+            </Link>
+            <Button
+              fullWidth
+              variant="faded"
+              size="sm"
+              onClick={onOpenSubtitles}
+            >
+              Subtitles
+            </Button>
+          </div>
+        )}
+      </div>
 
       <ModalSubtitles
         isOpen={isSubtitlesOpen}
