@@ -44,7 +44,7 @@ export default function Home() {
           <Skeleton className="w-full h-full min-h-[235px] rounded-large" />
         }
         next={fetchNextPage}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6"
       >
         <ListTrailers
           trailers={trailers}
