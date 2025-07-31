@@ -5,8 +5,8 @@
   "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
+    "start": "bun src/index.js",
+    "dev": "bun --watch src/index.js",
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate"
   },
@@ -14,10 +14,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.614.0",
     "axios": "^1.6.8",
     "axios-retry": "^4.1.0",
-    "better-sqlite3": "^9.4.3",
     "cheerio": "1.0.0-rc.12",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -32,13 +30,13 @@
     "m3u8-parser": "^6.2.0",
     "mime-types": "^2.1.35",
     "node-cron": "^3.0.3",
-    "nodemon": "^3.1.0",
     "slug": "^8.2.2",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@types/bun": "^1.2.19",
     "drizzle-kit": "^0.27.0"
   }
 }

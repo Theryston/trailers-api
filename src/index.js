@@ -15,9 +15,9 @@ import findProcess from "./db/find-process.js";
 import swaggerUi from "swagger-ui-express";
 import specs from "./swagger.js";
 import db from "./db/index.js";
-import { processSchema, subtitlesSchema, trailersSchema } from "./db/schema.js";
+import { processSchema, trailersSchema } from "./db/schema.js";
 import continueProcess from "./continue-process.js";
-import { and, count, countDistinct, desc, eq, gt } from "drizzle-orm";
+import { countDistinct, desc, eq } from "drizzle-orm";
 
 const app = express();
 app.use(express.json());

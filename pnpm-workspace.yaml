@@ -1,5 +1,0 @@
-onlyBuiltDependencies:
-  - '@scarf/scarf'
-  - better-sqlite3
-  - esbuild
-  - ffmpeg-static

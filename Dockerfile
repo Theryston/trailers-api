@@ -1,13 +1,11 @@
-FROM node:20-alpine
+FROM oven/bun:alpine
 
 WORKDIR /app
 
 COPY . .
 
-RUN npm install -g pnpm
-
-RUN pnpm install
+RUN bun install
 
 EXPOSE 3000
 
-CMD ["pnpm", "run", "start"]
+CMD ["bun", "run", "start"]
