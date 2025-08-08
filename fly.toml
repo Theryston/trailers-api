@@ -7,7 +7,7 @@ dockerfile = "Dockerfile"
 [http_service]
 internal_port = 3000
 force_https = true
-auto_stop_machines = 'suspend'
+auto_stop_machines = 'stop'
 auto_start_machines = true
 min_machines_running = 0
 processes = ['app']
@@ -18,5 +18,5 @@ destination = '/data'
 
 [[vm]]
 cpu_kind = 'shared'
-memory = '1gb'
+memory = '2gb'
 cpus = 1
