@@ -11,6 +11,28 @@ import compareLang from "../../utils/compre-lang.js";
 import subtitleXmlToVtt from "../../utils/subtitle-xml-to-vtt.js";
 import axios from "axios";
 
+function normalizeHtmlPayload(payload) {
+  if (typeof payload === "string") {
+    return payload;
+  }
+
+  if (Buffer.isBuffer(payload)) {
+    return payload.toString("utf-8");
+  }
+
+  if (payload && typeof payload === "object") {
+    for (const key of ["html", "body", "content"]) {
+      if (typeof payload[key] === "string") {
+        return payload[key];
+      }
+    }
+
+    return JSON.stringify(payload);
+  }
+
+  return String(payload || "");
+}
+
 function extractPrimeTitleId(primeVideoPage, $PrimePage) {
   const hydrationDataStr = $PrimePage("script#dv-web-page-hydration-data").text();
 
@@ -107,7 +129,11 @@ export default async function primeVideo({
       onTrailerFound(trailerPage);
     }
 
-    const { data: primeVideoPage } = await axios.get(trailerPage);
+    const { data: rawPrimeVideoPage } = await axios.get(trailerPage, {
+      responseType: "text",
+      transformResponse: [(data) => data],
+    });
+    const primeVideoPage = normalizeHtmlPayload(rawPrimeVideoPage);
     const $PrimePage = loadCheerio(primeVideoPage);
     const titleId = extractPrimeTitleId(primeVideoPage, $PrimePage);
 

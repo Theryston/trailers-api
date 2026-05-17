@@ -29,10 +29,12 @@ export default async function downloadHls({ url, outPath, lang }) {
     }
 
     const bestPlaylist = playlists.sort((a, b) => b.attributes.RESOLUTION.width - a.attributes.RESOLUTION.width)[0];
-    const allAudios = Object.values(masterPlaylistParser.manifest.mediaGroups.AUDIO);
-    const audios = Object.values(allAudios[0])
-    const allSubtitles = Object.values(masterPlaylistParser.manifest.mediaGroups.SUBTITLES);
-    const subtitles = Object.values(allSubtitles[0] || {});
+    const audioGroupId = bestPlaylist.attributes.AUDIO;
+    const subtitleGroupId = bestPlaylist.attributes.SUBTITLES;
+    const audios = Object.values(masterPlaylistParser.manifest.mediaGroups?.AUDIO?.[audioGroupId] || {})
+        .filter(audio => audio?.uri);
+    const subtitles = Object.values(masterPlaylistParser.manifest.mediaGroups?.SUBTITLES?.[subtitleGroupId] || {})
+        .filter(subtitle => subtitle?.uri);
 
     return await handleMasterPlaylist({ playlist: bestPlaylist, outPath, lang, audios, subtitles });
 }
@@ -47,8 +49,12 @@ async function handleMasterPlaylist({ playlist, outPath, lang, audios, subtitles
     }
 
     if (lang) {
-        audios = [audios.filter(audio => compareLang(lang, audio.language))[0]];
+        const matchedAudio = audios.find(audio => audio?.language && compareLang(lang, audio.language));
+        audios = [matchedAudio || audios[0]].filter(Boolean);
     }
+
+    audios = audios.filter(Boolean);
+    subtitles = subtitles.filter(Boolean);
 
     const downloadedSubtitles = [];
     for (let i = 0; i < subtitles.length; i++) {
@@ -84,7 +90,7 @@ async function handleMasterPlaylist({ playlist, outPath, lang, audios, subtitles
     for (let i = 0; i < audios.length; i++) {
         const audio = audios[i];
 
-        if (audio.characteristics && audio.characteristics.includes('describes-video')) {
+        if (audio?.characteristics && audio.characteristics.includes('describes-video')) {
             log({
                 type: 'INFO',
                 message: `Ignoring audio because it describes a video: ${audio.language}`,
@@ -99,6 +105,10 @@ async function handleMasterPlaylist({ playlist, outPath, lang, audios, subtitles
             path: audioPath,
             language: audio.language
         });
+    }
+
+    if (!downloadedAudios.length) {
+        throw new Error('No audio tracks found');
     }
 
     const tempVideoFolder = fs.mkdtempSync(path.join(GLOBAL_TEMP_FOLDER, 'download-hls-video-'));
