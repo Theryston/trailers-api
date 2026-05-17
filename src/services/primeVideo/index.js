@@ -11,6 +11,52 @@ import compareLang from "../../utils/compre-lang.js";
 import subtitleXmlToVtt from "../../utils/subtitle-xml-to-vtt.js";
 import axios from "axios";
 
+function extractPrimeTitleId(primeVideoPage, $PrimePage) {
+  const hydrationDataStr = $PrimePage("script#dv-web-page-hydration-data").text();
+
+  if (hydrationDataStr) {
+    try {
+      const hydrationData = JSON.parse(hydrationDataStr);
+      const selfTitles =
+        hydrationData?.init?.preparations?.body?.atf?.state?.self;
+
+      if (selfTitles) {
+        const titleId = Object.values(selfTitles).find(
+          (entry) => Array.isArray(entry?.asins) && entry.asins.length
+        )?.asins?.[0];
+
+        if (titleId) {
+          return titleId;
+        }
+      }
+    } catch {}
+  }
+
+  const pageTypeId = primeVideoPage.match(
+    /DVWebNode\.pageTypeId='([^']+)'/
+  )?.[1];
+
+  if (pageTypeId) {
+    return pageTypeId;
+  }
+
+  const legacyDataStr = $PrimePage('script[type="text/template"]')
+    .toArray()
+    .find((script) => script.children[0]?.data.includes("props"))
+    ?.children[0]?.data;
+
+  if (!legacyDataStr) {
+    return null;
+  }
+
+  try {
+    const legacyData = JSON.parse(legacyDataStr);
+    return legacyData.props.body[0].args?.titleID || null;
+  } catch {
+    return null;
+  }
+}
+
 export default async function primeVideo({
   name,
   year,
@@ -63,12 +109,7 @@ export default async function primeVideo({
 
     const { data: primeVideoPage } = await axios.get(trailerPage);
     const $PrimePage = loadCheerio(primeVideoPage);
-    const dataStr = $PrimePage('script[type="text/template"]')
-      .toArray()
-      .find((script) => script.children[0]?.data.includes("props"))
-      .children[0]?.data;
-    const data = JSON.parse(dataStr);
-    const titleId = data.props.body[0].args?.titleID;
+    const titleId = extractPrimeTitleId(primeVideoPage, $PrimePage);
 
     if (!titleId) {
       log({

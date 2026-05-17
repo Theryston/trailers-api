@@ -5,7 +5,70 @@ import google from "../../google.js";
 import { load as loadCheerio } from "cheerio";
 import downloadHls from "../../utils/download-hls.js";
 import axios from "axios";
-import fs from "node:fs";
+
+function extractAppleTvTrailers($, unique) {
+  const serializedDataStr = $("script#serialized-server-data").text();
+
+  if (serializedDataStr) {
+    try {
+      const serializedData = JSON.parse(serializedDataStr);
+      const currentPageData = serializedData?.data?.find((entry) => {
+        return (
+          entry?.intent?.id === unique ||
+          entry?.data?.canonicalURL?.includes(unique)
+        );
+      })?.data;
+
+      const trailers = currentPageData?.shelves
+        ?.find((shelf) => shelf?.id?.startsWith("uts.col.Trailers"))
+        ?.items?.map((item) => ({
+          title: item.title,
+          hlsUrl: item.playables?.[0]?.assets?.hlsUrl,
+        }))
+        .filter((item) => item.hlsUrl);
+
+      if (trailers?.length) {
+        return trailers;
+      }
+    } catch {}
+  }
+
+  const legacyDataStr = $("script#shoebox-uts-api-cache").text();
+
+  if (legacyDataStr) {
+    try {
+      const allData = JSON.parse(legacyDataStr);
+      const data = allData[
+        Object.keys(allData).find((key) => key.endsWith(`/${unique}`))
+      ];
+
+      const trailers = data?.canvas?.shelves
+        ?.find((shelf) => shelf.id.startsWith("uts.col.Trailers"))
+        ?.items?.map((item) => ({
+          title: item.title,
+          hlsUrl: item.playables?.[0]?.assets?.hlsUrl,
+        }))
+        .filter((item) => item.hlsUrl);
+
+      if (trailers?.length) {
+        return trailers;
+      }
+    } catch {}
+  }
+
+  const ogVideoUrl = $('meta[property="og:video"]').attr("content");
+
+  if (ogVideoUrl) {
+    return [
+      {
+        title: "Trailer",
+        hlsUrl: ogVideoUrl.replaceAll("&amp;", "&"),
+      },
+    ];
+  }
+
+  return [];
+}
 
 export default async function appleTv({
   name,
@@ -78,7 +141,6 @@ export default async function appleTv({
       onTrailerFound(trailerPage);
     }
 
-    const type = trailerPage.includes("/show") ? "show" : "movie";
     const url = new URL(trailerPage);
     const unique = url.pathname
       .split("/")
@@ -87,37 +149,9 @@ export default async function appleTv({
 
     const { data: appleTvPage } = await axios.get(trailerPage);
     const $ = loadCheerio(appleTvPage);
-    const dataStr = $("script#shoebox-uts-api-cache").text();
-    const allData = JSON.parse(dataStr);
-    const keys = Object.keys(allData);
-    const key = keys.find((k) => k.endsWith(`/${unique}`));
+    const trailers = extractAppleTvTrailers($, unique);
 
-    if (!key) {
-      log({
-        type: "ERROR",
-        message: `Apple TV | Trailer not found.`,
-      });
-      return false;
-    }
-
-    const data = allData[key];
-
-    if (!data) {
-      log({
-        type: "ERROR",
-        message: `Apple TV | Trailer not found.`,
-      });
-      return false;
-    }
-
-    const trailers = data.canvas.shelves
-      .find((s) => s.id.startsWith("uts.col.Trailers"))
-      ?.items?.map((t) => ({
-        title: t.title,
-        hlsUrl: t.playables[0].assets.hlsUrl,
-      }));
-
-    if (!trailers) {
+    if (!trailers.length) {
       log({
         type: "ERROR",
         message: `Apple TV | Trailer not found.`,
